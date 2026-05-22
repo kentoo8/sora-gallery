@@ -1,0 +1,18 @@
+[
+  {
+    "id": "01HX0000000000000000000001",
+    "videoUrl": "https://media.example.com/videos/01HX0000000000000000000001.mp4",
+    "thumbnailUrl": "https://media.example.com/thumbnails/01HX0000000000000000000001.webp",
+    "prompt": "A cinematic Sora scene with @example walking through a neon gallery.",
+    "tags": ["cinematic", "neon"],
+    "createdAt": "2026-05-22T00:00:00.000Z",
+    "description": "公開用の任意コメント。不要なら省略できます。"
+  },
+  {
+    "id": "01HX0000000000000000000002",
+    "videoUrl": "https://media.example.com/videos/01HX0000000000000000000002.mp4",
+    "thumbnailUrl": "https://media.example.com/thumbnails/01HX0000000000000000000002.webp",
+    "prompt": "静かな朝の街をドローンがゆっくり進む。",
+    "tags": []
+  }
+]

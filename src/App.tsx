@@ -26,22 +26,40 @@ type LoadState = "loading" | "ready" | "empty" | "error";
 const UNTAGGED_FILTER = "__untagged__";
 const cameoPattern = /@[A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)*/g;
 
+class VideoDataError extends Error {
+  constructor(
+    public readonly index: number,
+    message: string,
+  ) {
+    super(`videos.json[${index}]: ${message}`);
+  }
+}
+
 function isHttpsUrl(value: unknown): value is string {
   return typeof value === "string" && /^https:\/\//i.test(value);
 }
 
-function normalizeVideo(raw: unknown): GalleryVideo | null {
-  if (!raw || typeof raw !== "object") return null;
+function normalizeVideo(raw: unknown, index: number): GalleryVideo {
+  if (!raw || typeof raw !== "object") {
+    throw new VideoDataError(index, "動画項目は object である必要があります");
+  }
+
   const item = raw as Record<string, unknown>;
 
-  if (
-    typeof item.id !== "string" ||
-    !isHttpsUrl(item.videoUrl) ||
-    !isHttpsUrl(item.thumbnailUrl) ||
-    typeof item.prompt !== "string" ||
-    !Array.isArray(item.tags)
-  ) {
-    return null;
+  if (typeof item.id !== "string" || item.id.trim().length === 0) {
+    throw new VideoDataError(index, "id は必須の文字列です");
+  }
+  if (!isHttpsUrl(item.videoUrl)) {
+    throw new VideoDataError(index, "videoUrl は https:// で始まる絶対URLです");
+  }
+  if (!isHttpsUrl(item.thumbnailUrl)) {
+    throw new VideoDataError(index, "thumbnailUrl は https:// で始まる絶対URLです");
+  }
+  if (typeof item.prompt !== "string" || item.prompt.trim().length === 0) {
+    throw new VideoDataError(index, "prompt は必須の文字列です");
+  }
+  if (!Array.isArray(item.tags)) {
+    throw new VideoDataError(index, "tags は文字列配列です");
   }
 
   const videoUrl = item.videoUrl;
@@ -265,9 +283,7 @@ export default function App() {
           throw new Error("videos.json は配列である必要があります");
         }
 
-        const normalized = data
-          .map(normalizeVideo)
-          .filter((video): video is GalleryVideo => video !== null);
+        const normalized = data.map(normalizeVideo);
 
         setVideos(normalized);
         setLoadState(normalized.length > 0 ? "ready" : "empty");
