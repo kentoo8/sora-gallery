@@ -1,6 +1,25 @@
 import { readFile } from "node:fs/promises";
 
 const HTTPS_URL_PATTERN = /^https:\/\//i;
+const ALLOWED_FIELDS = new Set([
+  "id",
+  "videoUrl",
+  "thumbnailUrl",
+  "prompt",
+  "tags",
+  "createdAt",
+  "description",
+]);
+const FORBIDDEN_PUBLIC_TEXT_PATTERNS = [
+  /\/Users\//i,
+  /\\Users\\/i,
+  /[A-Z]:\\/i,
+  /file:\/\//i,
+  /config\.json/i,
+  /generations\.json/i,
+  /account\.json/i,
+  /data\/tags\.json/i,
+];
 
 class ValidationError extends Error {
   constructor(filePath, index, message) {
@@ -19,14 +38,45 @@ function assertHttpsUrl(value, filePath, index, fieldName) {
   if (!HTTPS_URL_PATTERN.test(value)) {
     throw new ValidationError(filePath, index, `${fieldName} must start with https://`);
   }
+
+  const url = new URL(value);
+  if (
+    url.hostname === "localhost" ||
+    url.hostname === "127.0.0.1" ||
+    url.hostname === "0.0.0.0" ||
+    url.hostname.endsWith(".local")
+  ) {
+    throw new ValidationError(filePath, index, `${fieldName} must not point to a local host`);
+  }
 }
 
-function validateVideo(item, filePath, index, seenIds) {
+function assertNoForbiddenPublicText(value, filePath, index, fieldName) {
+  if (typeof value !== "string") return;
+
+  for (const pattern of FORBIDDEN_PUBLIC_TEXT_PATTERNS) {
+    if (pattern.test(value)) {
+      throw new ValidationError(
+        filePath,
+        index,
+        `${fieldName} appears to contain local/private information`,
+      );
+    }
+  }
+}
+
+function validateVideo(item, filePath, index, seenIds, seenVideoUrls, seenThumbnailUrls) {
   if (!item || typeof item !== "object" || Array.isArray(item)) {
     throw new ValidationError(filePath, index, "item must be an object");
   }
 
+  for (const key of Object.keys(item)) {
+    if (!ALLOWED_FIELDS.has(key)) {
+      throw new ValidationError(filePath, index, `unknown field "${key}"`);
+    }
+  }
+
   assertString(item.id, filePath, index, "id");
+  assertNoForbiddenPublicText(item.id, filePath, index, "id");
   if (seenIds.has(item.id)) {
     throw new ValidationError(filePath, index, `duplicate id "${item.id}"`);
   }
@@ -34,7 +84,19 @@ function validateVideo(item, filePath, index, seenIds) {
 
   assertHttpsUrl(item.videoUrl, filePath, index, "videoUrl");
   assertHttpsUrl(item.thumbnailUrl, filePath, index, "thumbnailUrl");
+  assertNoForbiddenPublicText(item.videoUrl, filePath, index, "videoUrl");
+  assertNoForbiddenPublicText(item.thumbnailUrl, filePath, index, "thumbnailUrl");
+  if (seenVideoUrls.has(item.videoUrl)) {
+    throw new ValidationError(filePath, index, `duplicate videoUrl "${item.videoUrl}"`);
+  }
+  if (seenThumbnailUrls.has(item.thumbnailUrl)) {
+    throw new ValidationError(filePath, index, `duplicate thumbnailUrl "${item.thumbnailUrl}"`);
+  }
+  seenVideoUrls.add(item.videoUrl);
+  seenThumbnailUrls.add(item.thumbnailUrl);
+
   assertString(item.prompt, filePath, index, "prompt");
+  assertNoForbiddenPublicText(item.prompt, filePath, index, "prompt");
 
   if (!Array.isArray(item.tags)) {
     throw new ValidationError(filePath, index, "tags must be an array");
@@ -48,6 +110,7 @@ function validateVideo(item, filePath, index, seenIds) {
     if (tag !== tag.trim()) {
       throw new ValidationError(filePath, index, `tag "${tag}" has leading or trailing spaces`);
     }
+    assertNoForbiddenPublicText(tag, filePath, index, "tag");
     if (seenTags.has(tag)) {
       throw new ValidationError(filePath, index, `duplicate tag "${tag}"`);
     }
@@ -64,6 +127,7 @@ function validateVideo(item, filePath, index, seenIds) {
   if (item.description !== undefined && typeof item.description !== "string") {
     throw new ValidationError(filePath, index, "description must be a string when present");
   }
+  assertNoForbiddenPublicText(item.description, filePath, index, "description");
 }
 
 async function validateFile(filePath) {
@@ -75,7 +139,11 @@ async function validateFile(filePath) {
   }
 
   const seenIds = new Set();
-  data.forEach((item, index) => validateVideo(item, filePath, index, seenIds));
+  const seenVideoUrls = new Set();
+  const seenThumbnailUrls = new Set();
+  data.forEach((item, index) =>
+    validateVideo(item, filePath, index, seenIds, seenVideoUrls, seenThumbnailUrls),
+  );
   console.log(`${filePath}: ${data.length} video(s) OK`);
 }
 
@@ -84,6 +152,11 @@ if (filePaths.length === 0) {
   filePaths.push("public/videos.json");
 }
 
-for (const filePath of filePaths) {
-  await validateFile(filePath);
+try {
+  for (const filePath of filePaths) {
+    await validateFile(filePath);
+  }
+} catch (error) {
+  console.error(error instanceof Error ? error.message : error);
+  process.exitCode = 1;
 }
