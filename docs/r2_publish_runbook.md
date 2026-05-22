@@ -115,18 +115,33 @@ thumbnails/{publicId}.webp
    node scripts/validate-videos.mjs /private/tmp/sora-gallery-export/videos.json
    ```
 
-4. manifest の object key に従って、動画とサムネイルを R2 にアップロードする。
+4. `sora-player` でアップロード用ディレクトリを生成する。
+
+   ```bash
+   cd /Users/kentaokazaki/src/sora-player
+   npm run prepare:gallery-upload -- \
+     --public-base-url https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev \
+     --include-tag 高木ゆい \
+     --out /private/tmp/sora-gallery-upload
+   ```
+
+5. manifest の object key に従って、動画とサムネイルを R2 にアップロードする。
 
    初期のアップロード手段は `rclone` とする。`wrangler r2 object put` は単発確認には使えるが、動画 100 本規模の bulk upload には使わない。
 
-5. 代表 URL をブラウザまたは `curl` で確認する。
+   ```bash
+   rclone copy /private/tmp/sora-gallery-upload/videos r2:sora-gallery-media/videos
+   rclone copy /private/tmp/sora-gallery-upload/thumbnails r2:sora-gallery-media/thumbnails
+   ```
+
+6. 代表 URL をブラウザまたは `curl` で確認する。
 
    ```bash
    curl -I https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/videos/{publicId}.mp4
    curl -I https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/{publicId}.webp
    ```
 
-6. 本番の `public/videos.json` を生成する。
+7. 本番の `public/videos.json` を生成する。
 
    ```bash
    cd /Users/kentaokazaki/src/sora-player
@@ -136,7 +151,7 @@ thumbnails/{publicId}.webp
      --out ../sora-gallery/public/videos.json
    ```
 
-7. `sora-gallery` で検証する。
+8. `sora-gallery` で検証する。
 
    ```bash
    cd /Users/kentaokazaki/src/sora-gallery
@@ -144,7 +159,7 @@ thumbnails/{publicId}.webp
    npm run build
    ```
 
-8. `public/videos.json` をコミットする。
+9. `public/videos.json` をコミットする。
 
 ## 更新公開の流れ
 
