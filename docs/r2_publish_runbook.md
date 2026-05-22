@@ -212,6 +212,24 @@ rclone ls r2:sora-gallery-media/thumbnails
 npx wrangler r2 object put sora-gallery-media/test-picture/example.png --file ./example.png
 ```
 
+### 疎通確認結果
+
+2026-05-23 に `rclone copy` で動画 1 件とサムネイル 1 件のアップロードを確認した。
+
+```text
+videos/3a21a4b1-66fa-4086-86f9-bbaccfedef3d.mp4
+thumbnails/3a21a4b1-66fa-4086-86f9-bbaccfedef3d.webp
+```
+
+公開 URL への HEAD リクエストはどちらも 200 OK だった。
+
+```text
+https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/videos/3a21a4b1-66fa-4086-86f9-bbaccfedef3d.mp4
+https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/3a21a4b1-66fa-4086-86f9-bbaccfedef3d.webp
+```
+
+注意: この疎通確認は一時 manifest で生成した公開 ID を使っている。本番 export manifest を作る時は、この ID を維持するか、疎通確認用 object として削除するかを判断する。
+
 ## 独自ドメインへ切り替える場合
 
 `hio1345.com` を取得した場合は、以下の流れで切り替える。

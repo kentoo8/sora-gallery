@@ -28,3 +28,12 @@
 - 次回避けること: API token なしで同じ `wrangler` コマンドを繰り返さない。
 - 次回の推奨手順: ユーザーが Cloudflare dashboard で bucket を作成するか、R2 bucket 作成権限を持つ最小権限 API token をローカル環境変数 `CLOUDFLARE_API_TOKEN` に設定してから再実行する。
 - 秘密情報: なし。トークン、Cookie、認証コード、秘密鍵は記録しない。
+
+### sandbox 内 rclone ls の R2 endpoint 名前解決失敗
+
+- 発生日: 2026-05-23
+- コマンド: `rclone ls r2:sora-gallery-media/videos` および `rclone ls r2:sora-gallery-media/thumbnails`
+- エラー概要: sandbox 内では R2 S3 endpoint の名前解決に失敗し、`no such host` になった。一方で、ネットワーク許可付き `rclone copy` は成功し、公開 `r2.dev` URL への `curl -I` も 200 OK だった。
+- 次回避けること: sandbox 内通常実行の `rclone ls` だけを根拠にアップロード失敗と判断しない。
+- 次回の推奨手順: R2 S3 API への確認が必要な `rclone` コマンドはネットワーク許可付きで実行する。公開可否は `https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/...` への HEAD/GET でも確認する。
+- 秘密情報: なし。トークン、Cookie、認証コード、秘密鍵は記録しない。
