@@ -243,7 +243,7 @@ https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/videos/3a21a4b1-66fa-4086-86
 https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/3a21a4b1-66fa-4086-86f9-bbaccfedef3d.webp
 ```
 
-注意: この疎通確認は一時 manifest で生成した公開 ID を使っている。本番 export manifest を作る時は、この ID を維持するか、疎通確認用 object として削除するかを判断する。
+注意: この疎通確認は一時 manifest で生成した公開 ID を使っている。本番 export manifest では維持せず、疎通確認用 object として削除する方針とする。
 
 ## 独自ドメインへ切り替える場合
 
