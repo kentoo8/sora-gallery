@@ -28,6 +28,8 @@ type GalleryVideo = {
 
 `id`, `videoUrl`, `thumbnailUrl`, `prompt`, `tags` は必須とする。
 
+`prompt` は文字列であれば空文字を許容する。
+
 `videoUrl` と `thumbnailUrl` は `https://...` の絶対公開 URL のみ許可する。
 
 ## Consequences

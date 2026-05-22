@@ -33,6 +33,10 @@ test("accepts a valid public video item", () => {
   assert.doesNotThrow(() => validateSingle(validVideo()));
 });
 
+test("accepts an empty prompt", () => {
+  assert.doesNotThrow(() => validateSingle(validVideo({ prompt: "" })));
+});
+
 test("rejects unknown local-only fields", () => {
   assert.throws(
     () => validateSingle(validVideo({ filename: "local.mp4" })),

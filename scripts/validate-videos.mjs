@@ -34,6 +34,12 @@ function assertString(value, filePath, index, fieldName) {
   }
 }
 
+function assertStringField(value, filePath, index, fieldName) {
+  if (typeof value !== "string") {
+    throw new ValidationError(filePath, index, `${fieldName} must be a string`);
+  }
+}
+
 function assertHttpsUrl(value, filePath, index, fieldName) {
   assertString(value, filePath, index, fieldName);
   if (!HTTPS_URL_PATTERN.test(value)) {
@@ -96,7 +102,7 @@ export function validateVideo(item, filePath, index, seenIds, seenVideoUrls, see
   seenVideoUrls.add(item.videoUrl);
   seenThumbnailUrls.add(item.thumbnailUrl);
 
-  assertString(item.prompt, filePath, index, "prompt");
+  assertStringField(item.prompt, filePath, index, "prompt");
   assertNoForbiddenPublicText(item.prompt, filePath, index, "prompt");
 
   if (!Array.isArray(item.tags)) {

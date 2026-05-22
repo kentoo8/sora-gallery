@@ -156,7 +156,7 @@ type GalleryVideo = {
 - `id`: 公開用の安定 ID。個別動画 URL、将来の likes、将来 DB のキーに使う。
 - `videoUrl`: 動画ファイルの絶対公開 URL。
 - `thumbnailUrl`: サムネイル画像の絶対公開 URL。
-- `prompt`: 公開する Sora 生成 prompt。
+- `prompt`: 公開する Sora 生成 prompt。フィールドは必須だが、空文字は許容する。
 - `tags`: 公開用に選別済みのタグ。
 - `createdAt`: ソート用日時。export 時に元ファイル ULID などから算出してよい。
 - `description`: 後日自由に入れられる公開コメント。

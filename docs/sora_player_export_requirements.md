@@ -66,6 +66,7 @@ type GalleryVideo = {
 ### prompt
 
 - 公開してよい prompt のみを出力する。
+- prompt が空の場合も `prompt: ""` として出力してよい。
 - 非公開にしたい prompt は export 対象から外すか、公開前に明示的に除外する。
 
 ### tags

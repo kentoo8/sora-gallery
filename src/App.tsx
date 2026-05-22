@@ -55,8 +55,8 @@ function normalizeVideo(raw: unknown, index: number): GalleryVideo {
   if (!isHttpsUrl(item.thumbnailUrl)) {
     throw new VideoDataError(index, "thumbnailUrl は https:// で始まる絶対URLです");
   }
-  if (typeof item.prompt !== "string" || item.prompt.trim().length === 0) {
-    throw new VideoDataError(index, "prompt は必須の文字列です");
+  if (typeof item.prompt !== "string") {
+    throw new VideoDataError(index, "prompt は文字列である必要があります");
   }
   if (!Array.isArray(item.tags)) {
     throw new VideoDataError(index, "tags は文字列配列です");

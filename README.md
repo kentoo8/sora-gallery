@@ -36,6 +36,7 @@ type GalleryVideo = {
 ```
 
 `videoUrl` and `thumbnailUrl` must be public `https://...` URLs.
+`prompt` is a required field, but an empty string is allowed.
 
 Invalid entries are treated as data errors instead of being silently ignored.
 Only the documented fields are allowed; local-only fields such as `filename` or `account` fail validation.
