@@ -171,12 +171,26 @@ thumbnails/{publicId}.webp
 
 1. Cloudflare dashboard の R2 で API token を作成する。
 2. 権限は `sora-gallery-media` bucket の Object Read & Write に限定する。
-3. `rclone config` で remote 名 `r2` を作成する。
-4. provider は Cloudflare R2 を選ぶ。
-5. Access Key ID と Secret Access Key を入力する。
-6. endpoint は Cloudflare dashboard に表示される R2 S3 endpoint を使う。
+3. Account ID を控える。
+4. ローカルで `rclone config` を実行し、remote 名 `r2` を作成する。
+5. storage は S3-compatible provider を選ぶ。
+6. provider は Cloudflare R2 を選ぶ。
+7. Access Key ID と Secret Access Key を入力する。
+8. endpoint は `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` を入力する。
+9. Object-level 権限の token を使う場合は、設定ファイルに `no_check_bucket = true` を追加する。
 
 token や secret は repo、docs、チャットに記録しない。
+
+設定確認:
+
+```bash
+rclone version
+rclone listremotes
+rclone lsd r2:
+rclone ls r2:sora-gallery-media
+```
+
+`rclone config file` で設定ファイルの場所を確認できる。設定ファイルには secret が入るため、repo にコピーしない。
 
 アップロード例:
 
