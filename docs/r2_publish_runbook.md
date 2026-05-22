@@ -51,6 +51,24 @@ https://pub-xxxxxxxxxxxxxxxx.r2.dev/thumbnails/{publicId}.webp
 
 初期リリースでは、R2 への書き込み権限や API token を `sora-gallery` に置かない。アップロードはローカル作業または `sora-player` 側の補助スクリプトで行う。
 
+### bucket 作成方法
+
+Cloudflare dashboard で作成する場合:
+
+1. Cloudflare dashboard を開く。
+2. R2 Object Storage を開く。
+3. bucket 名 `sora-gallery-media` で bucket を作成する。
+4. bucket の公開アクセス設定で R2 標準公開 URL を有効にする。
+5. 発行された `https://pub-xxxxxxxxxxxxxxxx.r2.dev` を控える。
+
+`wrangler` で作成する場合:
+
+```bash
+npx wrangler r2 bucket create sora-gallery-media
+```
+
+Codex などの非対話環境から実行する場合は、R2 bucket 作成権限を持つ最小権限 API token をローカル環境変数 `CLOUDFLARE_API_TOKEN` に設定してから実行する。token は repo、docs、チャットに記録しない。
+
 ## object key 方針
 
 公開 object key に以下を含めない。
