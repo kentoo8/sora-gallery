@@ -21,6 +21,7 @@ Cloudflare Pages build output is `dist/`.
 
 Published videos are defined in `public/videos.json`.
 See `docs/examples/videos.example.json` for a complete example.
+See `docs/sora_player_export_requirements.md` for the planned export boundary from `sora-player`.
 
 ```ts
 type GalleryVideo = {

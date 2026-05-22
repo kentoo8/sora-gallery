@@ -6,6 +6,7 @@
 
 - `CONTEXT.md`
 - `docs/sora_gallery_requirements.md`
+- `docs/sora_player_export_requirements.md`
 - `docs/adr/`
 - `docs/skills/grill-me/SKILL.md`
 
