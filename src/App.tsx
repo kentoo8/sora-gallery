@@ -26,7 +26,7 @@ type LoadState = "loading" | "ready" | "empty" | "error";
 const UNTAGGED_FILTER = "__untagged__";
 const cameoPattern = /@[A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)*/g;
 
-function isHttpsUrl(value: unknown) {
+function isHttpsUrl(value: unknown): value is string {
   return typeof value === "string" && /^https:\/\//i.test(value);
 }
 
@@ -44,10 +44,13 @@ function normalizeVideo(raw: unknown): GalleryVideo | null {
     return null;
   }
 
+  const videoUrl = item.videoUrl;
+  const thumbnailUrl = item.thumbnailUrl;
+
   return {
     id: item.id,
-    videoUrl: item.videoUrl,
-    thumbnailUrl: item.thumbnailUrl,
+    videoUrl,
+    thumbnailUrl,
     prompt: item.prompt,
     tags: item.tags
       .filter((tag): tag is string => typeof tag === "string")
