@@ -37,3 +37,12 @@
 - 次回避けること: sandbox 内通常実行の `rclone ls` だけを根拠にアップロード失敗と判断しない。
 - 次回の推奨手順: R2 S3 API への確認が必要な `rclone` コマンドはネットワーク許可付きで実行する。公開可否は `https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/...` への HEAD/GET でも確認する。
 - 秘密情報: なし。トークン、Cookie、認証コード、秘密鍵は記録しない。
+
+### sora-player manifest 生成の writable root 外書き込み失敗
+
+- 発生日: 2026-05-23
+- コマンド: `/Users/kentaokazaki/src/sora-player` で `npm run prepare:gallery-upload -- --public-base-url https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev --include-tag 高木ゆい --out /private/tmp/sora-gallery-upload`
+- エラー概要: `sora-gallery` から作業している Codex sandbox では `/Users/kentaokazaki/src/sora-player` が writable root 外であり、`data/gallery-export-manifest.json` への書き込みが `EPERM` で失敗した。
+- 次回避けること: `sora-player` 側に manifest などを書き込むコマンドを通常実行して失敗させない。
+- 次回の推奨手順: `sora-player` 側にファイルを書き込むコマンドは最初から権限付きで実行する。読み取りや `git status` は通常実行でよい。
+- 秘密情報: なし。トークン、Cookie、認証コード、秘密鍵は記録しない。

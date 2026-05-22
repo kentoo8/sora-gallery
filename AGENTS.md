@@ -25,6 +25,13 @@
 - 不確実なものは「未確認」と明記する。
 - push は決してしない。
 
+## 隣接リポジトリ操作
+
+- `/Users/kentaokazaki/src/sora-gallery` から作業している場合、`/Users/kentaokazaki/src/sora-player` は writable root 外である。
+- `sora-player` 側にファイルを書き込むコマンド、または `sora-player/data/gallery-export-manifest.json` のような非公開 manifest を生成・更新するコマンドは、最初から権限付きで実行する。
+- 例: `npm run prepare:gallery-upload` を `/Users/kentaokazaki/src/sora-player` で実行して manifest を作る場合、通常実行で失敗させてから再実行しない。
+- ただし、単なる読み取りや `git status` などの確認コマンドは通常実行でよい。
+
 ## 認証・権限エラー時の運用
 
 - 認証、権限、ネットワーク許可、CLIログイン状態で失敗した場合は、同じ方法を無批判に繰り返さない。
