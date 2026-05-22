@@ -122,16 +122,18 @@ thumbnails/{publicId}.webp
    npm run prepare:gallery-upload -- \
      --public-base-url https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev \
      --include-tag 高木ゆい \
-     --out /private/tmp/sora-gallery-upload
+     --out /private/tmp/sora-gallery-upload-prod
    ```
+
+   `--out` には空のディレクトリを指定する。既存ファイルがある場合は、古い upload 対象の混入を避けるため prepare コマンドがエラーにする。
 
 5. manifest の object key に従って、動画とサムネイルを R2 にアップロードする。
 
    初期のアップロード手段は `rclone` とする。`wrangler r2 object put` は単発確認には使えるが、動画 100 本規模の bulk upload には使わない。
 
    ```bash
-   rclone copy /private/tmp/sora-gallery-upload/videos r2:sora-gallery-media/videos
-   rclone copy /private/tmp/sora-gallery-upload/thumbnails r2:sora-gallery-media/thumbnails
+   rclone copy /private/tmp/sora-gallery-upload-prod/videos r2:sora-gallery-media/videos
+   rclone copy /private/tmp/sora-gallery-upload-prod/thumbnails r2:sora-gallery-media/thumbnails
    ```
 
 6. 代表 URL をブラウザまたは `curl` で確認する。
