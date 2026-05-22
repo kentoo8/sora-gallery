@@ -41,4 +41,5 @@ Only the documented fields are allowed; local-only fields such as `filename` or 
 
 ```bash
 npm run validate:data
+npm test
 ```

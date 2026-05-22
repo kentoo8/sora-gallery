@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { pathToFileURL } from "node:url";
 
 const HTTPS_URL_PATTERN = /^https:\/\//i;
 const ALLOWED_FIELDS = new Set([
@@ -21,7 +22,7 @@ const FORBIDDEN_PUBLIC_TEXT_PATTERNS = [
   /data\/tags\.json/i,
 ];
 
-class ValidationError extends Error {
+export class ValidationError extends Error {
   constructor(filePath, index, message) {
     super(`${filePath}[${index}]: ${message}`);
   }
@@ -64,7 +65,7 @@ function assertNoForbiddenPublicText(value, filePath, index, fieldName) {
   }
 }
 
-function validateVideo(item, filePath, index, seenIds, seenVideoUrls, seenThumbnailUrls) {
+export function validateVideo(item, filePath, index, seenIds, seenVideoUrls, seenThumbnailUrls) {
   if (!item || typeof item !== "object" || Array.isArray(item)) {
     throw new ValidationError(filePath, index, "item must be an object");
   }
@@ -130,7 +131,7 @@ function validateVideo(item, filePath, index, seenIds, seenVideoUrls, seenThumbn
   assertNoForbiddenPublicText(item.description, filePath, index, "description");
 }
 
-async function validateFile(filePath) {
+export async function validateFile(filePath) {
   const source = await readFile(filePath, "utf8");
   const data = JSON.parse(source);
 
@@ -147,16 +148,18 @@ async function validateFile(filePath) {
   console.log(`${filePath}: ${data.length} video(s) OK`);
 }
 
-const filePaths = process.argv.slice(2);
-if (filePaths.length === 0) {
-  filePaths.push("public/videos.json");
-}
-
-try {
-  for (const filePath of filePaths) {
+export async function runCli(filePaths) {
+  const targets = filePaths.length > 0 ? filePaths : ["public/videos.json"];
+  for (const filePath of targets) {
     await validateFile(filePath);
   }
-} catch (error) {
-  console.error(error instanceof Error ? error.message : error);
-  process.exitCode = 1;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    await runCli(process.argv.slice(2));
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  }
 }
