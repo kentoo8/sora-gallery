@@ -32,6 +32,12 @@
 - 例: `npm run prepare:gallery-upload` を `/Users/kentaokazaki/src/sora-player` で実行して manifest を作る場合、通常実行で失敗させてから再実行しない。
 - ただし、単なる読み取りや `git status` などの確認コマンドは通常実行でよい。
 
+## ローカルサーバー起動
+
+- Codex sandbox では `127.0.0.1:5173` などへの port bind が `listen EPERM` で失敗することがある。
+- `npm run dev`、`npm run preview` などローカルサーバーを起動するコマンドは、最初から権限付きで実行する。
+- 通常実行で port bind を失敗させてから再実行しない。
+
 ## 認証・権限エラー時の運用
 
 - 認証、権限、ネットワーク許可、CLIログイン状態で失敗した場合は、同じ方法を無批判に繰り返さない。

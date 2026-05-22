@@ -46,3 +46,12 @@
 - 次回避けること: `sora-player` 側に manifest などを書き込むコマンドを通常実行して失敗させない。
 - 次回の推奨手順: `sora-player` 側にファイルを書き込むコマンドは最初から権限付きで実行する。読み取りや `git status` は通常実行でよい。
 - 秘密情報: なし。トークン、Cookie、認証コード、秘密鍵は記録しない。
+
+### dev server の port bind 権限失敗
+
+- 発生日: 2026-05-23
+- コマンド: `npm run dev -- --host 127.0.0.1`
+- エラー概要: sandbox 内の通常実行では `listen EPERM: operation not permitted 127.0.0.1:5173` で Vite dev server が起動できなかった。
+- 次回避けること: ローカルサーバー起動コマンドを通常実行して port bind で失敗させない。
+- 次回の推奨手順: `npm run dev`、`npm run preview` など port bind を伴うコマンドは最初から権限付きで実行する。
+- 秘密情報: なし。トークン、Cookie、認証コード、秘密鍵は記録しない。
