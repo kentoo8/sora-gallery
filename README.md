@@ -20,7 +20,7 @@ Cloudflare Pages build output is `dist/`.
 ## Data
 
 Published videos are defined in `public/videos.json`.
-See `public/videos.example.json` for a complete example.
+See `docs/examples/videos.example.json` for a complete example.
 
 ```ts
 type GalleryVideo = {
@@ -37,3 +37,7 @@ type GalleryVideo = {
 `videoUrl` and `thumbnailUrl` must be public `https://...` URLs.
 
 Invalid entries are treated as data errors instead of being silently ignored.
+
+```bash
+npm run validate:data
+```

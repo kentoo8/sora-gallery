@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run validate:data && tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "tsc -b --noEmit"
+    "lint": "tsc -b --noEmit",
+    "validate:data": "node scripts/validate-videos.mjs public/videos.json docs/examples/videos.example.json"
   },
   "dependencies": {
     "react": "^19.0.0",
