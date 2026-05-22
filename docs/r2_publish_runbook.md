@@ -247,6 +247,32 @@ https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/3a21a4b1-66fa-408
 
 注意: この疎通確認は一時 manifest で生成した公開 ID を使っている。本番 export manifest では維持せず、疎通確認用 object として削除する方針とする。
 
+### 初回アップロード結果
+
+2026-05-23 に `/private/tmp/sora-gallery-upload-prod` から R2 へ初回アップロードした。
+
+```text
+videos: 100 files
+thumbnails: 100 files
+local size: 203M
+```
+
+アップロードコマンド:
+
+```bash
+rclone copy /private/tmp/sora-gallery-upload-prod/videos r2:sora-gallery-media/videos --progress
+rclone copy /private/tmp/sora-gallery-upload-prod/thumbnails r2:sora-gallery-media/thumbnails --progress
+```
+
+代表 URL は 200 OK を確認した。
+
+```text
+https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/videos/7336a931-c2d1-477b-b9a6-63db1aacd7c2.mp4
+https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/7336a931-c2d1-477b-b9a6-63db1aacd7c2.webp
+https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/videos/6658c879-a6ab-415d-8c10-3188354b9967.mp4
+https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/2ef13128-00a8-46ef-863a-dad3e7f47aef.webp
+```
+
 ## 独自ドメインへ切り替える場合
 
 `hio1345.com` を取得した場合は、以下の流れで切り替える。
