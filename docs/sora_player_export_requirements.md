@@ -161,7 +161,6 @@ npm run build
 - `filename`, `account` などローカル専用フィールド。
 - 重複 ID。
 - 重複 URL。
-- 空 prompt。
 - 不正な `createdAt`。
 
 ## 初期実装でやらないこと

@@ -1,0 +1,167 @@
+# R2 公開手順書
+
+## 目的
+
+`sora-gallery` の動画とサムネイルを Cloudflare R2 から公開し、`public/videos.json` に安全な公開 URL だけを含める。
+
+この手順では、`sora-player` が公開対象の選別、公開 ID の生成、object key の決定、`videos.json` の生成を担当する。`sora-gallery` は生成済み JSON を読むだけにする。
+
+## 決める値
+
+本番作業前に以下を決める。
+
+| 項目 | 推奨値 | 状態 |
+| --- | --- | --- |
+| R2 bucket | `sora-gallery-media` | 未決定 |
+| 公開ドメイン | `sora-media.<your-domain>` | 未決定 |
+| 公開 base URL | `https://sora-media.<your-domain>` | 未決定 |
+| 動画 object key | `videos/{publicId}.mp4` | 推奨 |
+| サムネイル object key | `thumbnails/{publicId}.webp` | 推奨 |
+| 公開対象タグ | `高木ゆい` | 初期候補 |
+
+`--public-base-url` には、object key の `videos/...` と `thumbnails/...` より上の URL を指定する。
+
+`https://media.example.com/sora` のように path prefix を使いたい場合は、R2 側の object key も `sora/videos/...` にする必要がある。現在の `sora-player` export script は `videos/...` と `thumbnails/...` を前提にしているため、初期は専用サブドメインを使う。
+
+例:
+
+```bash
+--public-base-url https://sora-media.example.com
+```
+
+この場合、生成される URL は以下になる。
+
+```text
+https://sora-media.example.com/videos/{publicId}.mp4
+https://sora-media.example.com/thumbnails/{publicId}.webp
+```
+
+## R2 側の準備
+
+1. Cloudflare R2 に bucket を作成する。
+2. カスタムドメインを bucket に接続する。
+3. 公開 URL で匿名 GET できることを確認する。
+4. Cloudflare のキャッシュ方針を確認する。
+5. 削除や差し替え時に cache purge が必要か確認する。
+
+初期リリースでは、R2 への書き込み権限や API token を `sora-gallery` に置かない。アップロードはローカル作業または `sora-player` 側の補助スクリプトで行う。
+
+## object key 方針
+
+公開 object key に以下を含めない。
+
+- 元ファイル名。
+- 元 ULID。
+- ローカルディレクトリ構造。
+- アカウント名。
+- `generations.json` 由来の生 ID。
+
+公開 object key は、`sora-player` の export manifest が保持する公開 ID から作る。
+
+```text
+videos/{publicId}.mp4
+thumbnails/{publicId}.webp
+```
+
+## 初回公開の流れ
+
+1. `sora-player` で公開対象タグを確認する。
+
+   初期候補:
+
+   ```text
+   高木ゆい
+   ```
+
+2. 一時出力で export 結果を確認する。
+
+   ```bash
+   cd /Users/kentaokazaki/src/sora-player
+   npm run export:gallery -- \
+     --public-base-url https://sora-media.example.com \
+     --include-tag 高木ゆい \
+     --out /private/tmp/sora-gallery-export/videos.json \
+     --manifest /private/tmp/sora-gallery-export/manifest.json
+   ```
+
+3. `sora-gallery` の validator で確認する。
+
+   ```bash
+   cd /Users/kentaokazaki/src/sora-gallery
+   node scripts/validate-videos.mjs /private/tmp/sora-gallery-export/videos.json
+   ```
+
+4. manifest の object key に従って、動画とサムネイルを R2 にアップロードする。
+
+   アップロード手段は未確定。初期は Cloudflare dashboard、`rclone`、`wrangler r2 object put` などから選ぶ。
+
+5. 代表 URL をブラウザまたは `curl` で確認する。
+
+   ```bash
+   curl -I https://sora-media.example.com/videos/{publicId}.mp4
+   curl -I https://sora-media.example.com/thumbnails/{publicId}.webp
+   ```
+
+6. 本番の `public/videos.json` を生成する。
+
+   ```bash
+   cd /Users/kentaokazaki/src/sora-player
+   npm run export:gallery -- \
+     --public-base-url https://sora-media.example.com \
+     --include-tag 高木ゆい \
+     --out ../sora-gallery/public/videos.json
+   ```
+
+7. `sora-gallery` で検証する。
+
+   ```bash
+   cd /Users/kentaokazaki/src/sora-gallery
+   npm run validate:data
+   npm run build
+   ```
+
+8. `public/videos.json` をコミットする。
+
+## 更新公開の流れ
+
+1. `sora-player` で公開対象タグを更新する。
+2. 同じ manifest を使って export する。
+3. 新規または変更された object key のファイルを R2 にアップロードする。
+4. `sora-gallery` で `npm run validate:data` と `npm run build` を実行する。
+5. `public/videos.json` をコミットする。
+
+既存動画の公開 ID は manifest で維持する。manifest を消すと個別 URL と将来の likes キーが変わるため、公開後は消さない。
+
+## 非公開化・削除
+
+一時的に一覧から外すだけなら、次回 export で `public/videos.json` から除外する。
+
+本当に取り下げる場合は以下も行う。
+
+1. `public/videos.json` から対象動画を除外する。
+2. R2 から動画本体とサムネイルを削除する。
+3. 必要に応じて Cloudflare cache purge を行う。
+4. 個別 URL が 404 または意図した応答になることを確認する。
+
+manifest の対象 entry は、再公開の可能性があるなら残す。完全削除したい場合だけ、別途判断して削除する。
+
+## セキュリティ・プライバシー確認
+
+公開前に確認する。
+
+- `public/videos.json` にローカルパスがない。
+- `filename`, `account`, `config.json`, `generations.json`, `data/tags.json` が含まれない。
+- URL が `https://...` である。
+- localhost や `.local` を指していない。
+- R2 object key に元ファイル名、元 ULID、ローカル構造が含まれない。
+- 公開してよい prompt / description だけが含まれる。
+- 公開してよいタグだけが含まれる。
+
+## 未決定事項
+
+- 本番 R2 bucket 名。
+- 本番公開ドメイン。
+- R2 アップロード手段。
+- CORS 設定の要否。
+- Cache-Control の具体値。
+- cache purge の運用。
