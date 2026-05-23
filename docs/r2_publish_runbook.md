@@ -19,6 +19,7 @@
 | 動画 object key | `videos/{publicId}.mp4` | 推奨 |
 | サムネイル object key | `thumbnails/{publicId}.webp` | 推奨 |
 | 公開対象タグ | `高木ゆい` | 初期候補 |
+| 除外タグ | `meta:no-public`, `ぼっちざろっく！`, `けいおん！` | 採用 |
 | R2 アップロード手段 | `rclone` | 採用 |
 
 `--public-base-url` には、object key の `videos/...` と `thumbnails/...` より上の URL を指定する。
@@ -89,12 +90,19 @@ thumbnails/{publicId}.webp
 
 ## 初回公開の流れ
 
-1. `sora-player` で公開対象タグを確認する。
+1. `sora-player` で公開対象タグと除外タグを確認する。
 
-   初期候補:
+   通常運用では、非公開の `data/gallery-export-config.json` にまとめる。
 
-   ```text
-   高木ゆい
+   ```json
+   {
+     "version": 1,
+     "publicBaseUrl": "https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev",
+     "includeTags": ["高木ゆい"],
+     "excludeTags": ["meta:no-public", "ぼっちざろっく！", "けいおん！"],
+     "privateTagPrefixes": ["meta:"],
+     "allowedMetaTags": ["meta:no-public"]
+   }
    ```
 
 2. 一時出力で export 結果を確認する。
@@ -102,8 +110,7 @@ thumbnails/{publicId}.webp
    ```bash
    cd /Users/kentaokazaki/src/sora-player
    npm run export:gallery -- \
-     --public-base-url https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev \
-     --include-tag 高木ゆい \
+     --config data/gallery-export-config.json \
      --out /private/tmp/sora-gallery-export/videos.json \
      --manifest /private/tmp/sora-gallery-export/manifest.json
    ```
@@ -120,8 +127,7 @@ thumbnails/{publicId}.webp
    ```bash
    cd /Users/kentaokazaki/src/sora-player
    npm run prepare:gallery-upload -- \
-     --public-base-url https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev \
-     --include-tag 高木ゆい \
+     --config data/gallery-export-config.json \
      --out /private/tmp/sora-gallery-upload-prod
    ```
 
@@ -148,8 +154,7 @@ thumbnails/{publicId}.webp
    ```bash
    cd /Users/kentaokazaki/src/sora-player
    npm run export:gallery -- \
-     --public-base-url https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev \
-     --include-tag 高木ゆい \
+     --config data/gallery-export-config.json \
      --out ../sora-gallery/public/videos.json
    ```
 
@@ -165,7 +170,7 @@ thumbnails/{publicId}.webp
 
 ## 更新公開の流れ
 
-1. `sora-player` で公開対象タグを更新する。
+1. `sora-player` で公開対象タグ、`meta:no-public`、タグ単位の除外設定を更新する。
 2. 同じ manifest を使って export する。
 3. 新規または変更された object key のファイルを R2 にアップロードする。
 4. `sora-gallery` で `npm run validate:data` と `npm run build` を実行する。
@@ -286,6 +291,8 @@ https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/2ef13128-00a8-46e
 ## 非公開化・削除
 
 一時的に一覧から外すだけなら、次回 export で `public/videos.json` から除外する。
+
+個別動画を外す場合は、`sora-player` で `meta:no-public` タグを付ける。タグ全体を外す場合は、`data/gallery-export-config.json` の `excludeTags` に追加する。`meta:` prefix は export 制御用として予約し、`public/videos.json` には出力しない。
 
 本当に取り下げる場合は以下も行う。
 

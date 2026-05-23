@@ -181,6 +181,9 @@ type GalleryVideo = {
 - 公開用に選別済みのタグだけを `public/videos.json` に含める。
 - タグは一覧上部の絞り込みチップと再生画面に表示する。
 - 動画カードにはタグを表示しない。
+- `meta:` prefix は `sora-player` 側の export 制御用として予約し、公開タグとしては出力しない。
+- `meta:no-public` は個別動画を公開対象から外すためのローカル制御タグとする。
+- `ぼっちざろっく！` や `けいおん！` のように、タグ単位で公開対象から除外したいものは `sora-player` 側の export 設定で管理する。
 
 ## 公開禁止情報
 
@@ -202,6 +205,8 @@ type GalleryVideo = {
 - 初期リリースでは `visibility`, `deletedAt`, `private` のような状態フィールドを持たない。
 - 公開対象だけを `public/videos.json` に含める。
 - 非公開化や削除は `public/videos.json` から除外する運用とする。
+- 個別動画の一時的な非公開化は、`sora-player` 側で `meta:no-public` を付け、次回 export で除外する。
+- タグ単位の非公開化は、`sora-player/data/gallery-export-config.json` の `excludeTags` で管理する。
 - 本当に取り下げる場合は、必要に応じて R2 の動画本体とサムネイルも削除する。
 - Cloudflare CDN にキャッシュが残る場合は、必要に応じて purge する。
 

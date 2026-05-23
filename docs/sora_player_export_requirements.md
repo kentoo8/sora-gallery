@@ -90,6 +90,30 @@ type GalleryVideo = {
 - `sora-gallery` 側には `visibility`, `private`, `deletedAt` を持たせない。
 - 非公開化や削除は次回 export で `videos.json` から除外する。
 
+通常運用では、`sora-player/data/gallery-export-config.json` に公開対象と除外対象をまとめる。この実設定は非公開ファイルとして Git 管理しない。コミットするのは `data/gallery-export-config.example.json` のような例だけにする。
+
+設定例:
+
+```json
+{
+  "version": 1,
+  "publicBaseUrl": "https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev",
+  "includeTags": ["高木ゆい"],
+  "excludeTags": ["meta:no-public", "ぼっちざろっく！", "けいおん！"],
+  "privateTagPrefixes": ["meta:"],
+  "allowedMetaTags": ["meta:no-public"]
+}
+```
+
+選別ルール:
+
+- `includeTags` のいずれかが付いた動画だけを公開候補にする。
+- `excludeTags` のいずれかが付いた動画は、公開候補であっても除外する。
+- `meta:no-public` は個別動画を公開対象から外すためのローカル制御タグとする。
+- `meta:` は予約 prefix とし、一般公開タグとして使わない。
+- 公開候補に `allowedMetaTags` 以外の `meta:*` タグが付いている場合、export は失敗させる。
+- `meta:*` タグは `public/videos.json` の `tags` には出力しない。
+
 ## 非公開の対応表
 
 公開用 ID を安定させるため、`sora-player` 側に非公開の対応表を持つ。
@@ -126,7 +150,7 @@ type GalleryExportManifest = {
 想定:
 
 ```bash
-npm run export:gallery -- --out ../sora-gallery/public/videos.json
+npm run export:gallery -- --config data/gallery-export-config.json --out ../sora-gallery/public/videos.json
 ```
 
 将来、必要なら `sora-player` の UI から実行できるようにする。
