@@ -177,13 +177,13 @@ const ThumbnailCard = memo(function ThumbnailCard({
   video,
   isActive,
   onOpen,
+  onUnavailable,
 }: {
   video: GalleryVideo;
   isActive: boolean;
   onOpen: () => void;
+  onUnavailable: (videoId: string) => void;
 }) {
-  const [imageFailed, setImageFailed] = useState(false);
-
   return (
     <button
       type="button"
@@ -194,19 +194,13 @@ const ThumbnailCard = memo(function ThumbnailCard({
           : "border-transparent hover:border-white/20"
       }`}
     >
-      {!imageFailed ? (
-        <img
-          src={video.thumbnailUrl}
-          alt=""
-          loading="lazy"
-          onError={() => setImageFailed(true)}
-          className="h-full w-full object-cover opacity-65 transition-opacity duration-500 group-hover:opacity-100"
-        />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center bg-black text-xs text-white/35">
-          No thumbnail
-        </div>
-      )}
+      <img
+        src={video.thumbnailUrl}
+        alt=""
+        loading="lazy"
+        onError={() => onUnavailable(video.id)}
+        className="h-full w-full object-cover opacity-65 transition-opacity duration-500 group-hover:opacity-100"
+      />
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-100" />
       <div className="absolute bottom-0 left-0 right-0 translate-y-1 p-3 transition-transform duration-300 group-hover:translate-y-0">
@@ -256,6 +250,9 @@ export default function App() {
   const [showControls, setShowControls] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [unavailableVideoIds, setUnavailableVideoIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const searchInputRef = useRef<HTMLInputElement>(null);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const touchStartX = useRef<number | null>(null);
@@ -311,9 +308,22 @@ export default function App() {
   }, [isComposing, searchQuery]);
 
   const sortedVideos = useMemo(
-    () => sortVideos(videos, sortOrder),
-    [sortOrder, videos],
+    () =>
+      sortVideos(
+        videos.filter((video) => !unavailableVideoIds.has(video.id)),
+        sortOrder,
+      ),
+    [sortOrder, unavailableVideoIds, videos],
   );
+
+  const markVideoUnavailable = useCallback((videoId: string) => {
+    setUnavailableVideoIds((prev) => {
+      if (prev.has(videoId)) return prev;
+      const next = new Set(prev);
+      next.add(videoId);
+      return next;
+    });
+  }, []);
 
   const filteredVideos = useMemo(
     () =>
@@ -327,7 +337,7 @@ export default function App() {
 
   const tagCounts = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const video of videos) {
+    for (const video of sortedVideos) {
       for (const tag of video.tags) {
         counts.set(tag, (counts.get(tag) || 0) + 1);
       }
@@ -337,11 +347,11 @@ export default function App() {
       if (bCount !== aCount) return bCount - aCount;
       return a.localeCompare(b, "ja");
     });
-  }, [videos]);
+  }, [sortedVideos]);
 
   const untaggedCount = useMemo(
-    () => videos.filter((video) => video.tags.length === 0).length,
-    [videos],
+    () => sortedVideos.filter((video) => video.tags.length === 0).length,
+    [sortedVideos],
   );
 
   const currentVideo = useMemo(() => {
@@ -367,6 +377,12 @@ export default function App() {
     setCurrentVideoId(videoId);
     pushUrlForVideo(videoId);
   }, []);
+
+  useEffect(() => {
+    if (currentVideoId && !currentVideo) {
+      openGallery();
+    }
+  }, [currentVideo, currentVideoId, openGallery]);
 
   const openTagGallery = useCallback(
     (tag: string) => {
@@ -717,6 +733,7 @@ export default function App() {
                   videoRefs.current[video.id] = element;
                 }}
                 src={video.videoUrl}
+                onError={() => markVideoUnavailable(video.id)}
                 className="h-full w-full object-contain"
                 loop
                 muted={!isActive || isMuted}
@@ -898,7 +915,7 @@ export default function App() {
                 </button>
                 {isSearchActive && (
                   <p className="font-mono text-xs text-blue-300">
-                    Showing {filteredVideos.length} of {videos.length}
+                    Showing {filteredVideos.length} of {sortedVideos.length}
                     {activeSearchQuery && ` results for "${activeSearchQuery}"`}
                     {activeTag && ` tagged "${activeTagLabel}"`}
                   </p>
@@ -944,7 +961,7 @@ export default function App() {
                   active={activeTag === ""}
                   onClick={() => setActiveTag("")}
                 >
-                  All <span className="ml-1 opacity-60">{videos.length}</span>
+                  All <span className="ml-1 opacity-60">{sortedVideos.length}</span>
                 </TagButton>
                 {untaggedCount > 0 && (
                   <TagButton
@@ -978,6 +995,7 @@ export default function App() {
                     video={video}
                     isActive={video.id === currentVideoId}
                     onOpen={() => openVideo(video.id)}
+                    onUnavailable={markVideoUnavailable}
                   />
                 ))}
               </div>

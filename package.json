@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "lint": "tsc -b --noEmit",
     "test": "node --test scripts/*.test.mjs",
-    "validate:data": "node scripts/validate-videos.mjs public/videos.json docs/examples/videos.example.json"
+    "validate:data": "node scripts/validate-videos.mjs public/videos.json docs/examples/videos.example.json",
+    "validate:remote": "node scripts/validate-remote-assets.mjs public/videos.json"
   },
   "dependencies": {
     "react": "^19.0.0",

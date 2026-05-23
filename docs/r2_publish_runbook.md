@@ -163,6 +163,7 @@ thumbnails/{publicId}.webp
    ```bash
    cd /Users/kentaokazaki/src/sora-gallery
    npm run validate:data
+   npm run validate:remote
    npm run build
    ```
 
@@ -174,7 +175,7 @@ thumbnails/{publicId}.webp
 2. 同じ manifest を使って export する。
 3. 新規または変更された object key のファイルを R2 にアップロードする。
 4. 今回の `public/videos.json` から外れた動画の R2 object を削除する。
-5. `sora-gallery` で `npm run validate:data` と `npm run build` を実行する。
+5. `sora-gallery` で `npm run validate:data`、`npm run validate:remote`、`npm run build` を実行する。
 6. `public/videos.json` をコミットする。
 
 既存動画の公開 ID は manifest で維持する。manifest を消すと個別 URL と将来の likes キーが変わるため、公開後は消さない。
@@ -331,6 +332,7 @@ manifest の対象 entry は、再公開時に同じ公開 ID を使えるよう
 - R2 object key に元ファイル名、元 ULID、ローカル構造が含まれない。
 - 公開してよい prompt / description だけが含まれる。
 - 公開してよいタグだけが含まれる。
+- `npm run validate:remote` が成功し、`videoUrl` と `thumbnailUrl` に 404 がない。
 
 ## 未決定事項
 

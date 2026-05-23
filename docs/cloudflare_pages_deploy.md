@@ -12,6 +12,7 @@ Cloudflare dashboard の Workers & Pages 画面にある `Upload your static fil
 
 ```bash
 cd /Users/kentaokazaki/src/sora-gallery
+npm run validate:remote
 npm run build
 npx wrangler pages deploy dist --project-name sora-gallery
 ```
@@ -52,9 +53,10 @@ https://4531bb51.sora-gallery.pages.dev
 確認すること:
 
 - 一覧が表示される。
-- `videos.json` が 100 件で取得できる。
+- `videos.json` が 99 件で取得できる。
 - 個別動画 URL が 404 にならない。
 - R2 の動画が再生できる。
+- `npm run validate:remote` が通っている。
 - ミュート解除で音が出る。
 - 検索できる。
 - タグ絞り込みできる。
