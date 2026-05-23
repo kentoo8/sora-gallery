@@ -253,6 +253,9 @@ export default function App() {
   const [unavailableVideoIds, setUnavailableVideoIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [likesMap, setLikesMap] = useState<Record<string, number>>({});
+  const [likedVideoIds, setLikedVideoIds] = useState<Set<string>>(() => new Set());
+  const [isLikePending, setIsLikePending] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const touchStartX = useRef<number | null>(null);
@@ -300,6 +303,38 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("sora_liked_videos");
+      if (stored) {
+        const ids = JSON.parse(stored);
+        if (Array.isArray(ids)) {
+          setLikedVideoIds(new Set(ids));
+        }
+      }
+    } catch (e) {
+      console.error("LocalStorage読み込みエラー:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/likes")
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("Likes API error");
+        }
+        return response.json();
+      })
+      .then((data: any) => {
+        if (data && data.likes) {
+          setLikesMap(data.likes);
+        }
+      })
+      .catch((err) => {
+        console.warn("いいねデータの取得に失敗しました:", err.message);
+      });
+  }, [videos]);
 
   useEffect(() => {
     if (!isComposing) {
@@ -460,6 +495,49 @@ export default function App() {
       setIsCopied(false);
     }
   }, [currentVideo?.prompt]);
+
+  const handleLikeVideo = useCallback(
+    async (videoId: string) => {
+      if (likedVideoIds.has(videoId) || isLikePending) return;
+
+      setIsLikePending(true);
+      try {
+        const response = await fetch("/api/likes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ video_id: videoId }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Like POST error");
+        }
+
+        const data = (await response.json()) as { success: boolean; new_count: number };
+        if (data && data.success) {
+          setLikesMap((prev) => ({
+            ...prev,
+            [videoId]: data.new_count,
+          }));
+
+          setLikedVideoIds((prev) => {
+            const next = new Set(prev);
+            next.add(videoId);
+            try {
+              localStorage.setItem("sora_liked_videos", JSON.stringify(Array.from(next)));
+            } catch (e) {
+              console.error("LocalStorage保存エラー:", e);
+            }
+            return next;
+          });
+        }
+      } catch (err: any) {
+        console.error("いいね送信エラー:", err.message);
+      } finally {
+        setIsLikePending(false);
+      }
+    },
+    [likedVideoIds, isLikePending]
+  );
 
   const renderPromptText = useCallback(
     (prompt: string) => {
@@ -845,23 +923,47 @@ export default function App() {
                 <div className="pointer-events-auto max-h-40 flex-1 overflow-y-auto pr-1 text-sm leading-6 md:text-base">
                   {renderPromptText(currentVideo.prompt)}
                 </div>
-                <button
-                  type="button"
-                  onClick={handleCopyPrompt}
-                  className="pointer-events-auto flex shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 p-1.5 text-white/45 transition-all hover:scale-105 hover:bg-white/10 hover:text-white focus:outline-none focus-visible:border-white/40"
-                  title={isCopied ? "コピーしました" : "プロンプトをコピー"}
-                >
-                  {isCopied ? (
-                    <Icon className="h-3.5 w-3.5 text-emerald-300">
-                      <polyline points="20 6 9 17 4 12" />
+                <div className="pointer-events-auto flex flex-col gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleCopyPrompt}
+                    className="flex shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 p-1.5 text-white/45 transition-all hover:scale-105 hover:bg-white/10 hover:text-white focus:outline-none focus-visible:border-white/40"
+                    title={isCopied ? "コピーしました" : "プロンプトをコピー"}
+                  >
+                    {isCopied ? (
+                      <Icon className="h-3.5 w-3.5 text-emerald-300">
+                        <polyline points="20 6 9 17 4 12" />
+                      </Icon>
+                    ) : (
+                      <Icon className="h-3.5 w-3.5">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </Icon>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLikeVideo(currentVideo.id)}
+                    disabled={likedVideoIds.has(currentVideo.id) || isLikePending}
+                    className={`flex shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 transition-all focus:outline-none focus-visible:border-white/40 ${
+                      likedVideoIds.has(currentVideo.id)
+                        ? "border-pink-500/30 bg-pink-500/10 text-pink-400 cursor-default"
+                        : "border-white/10 bg-white/5 text-white/45 hover:scale-105 hover:bg-white/10 hover:text-white"
+                    }`}
+                    title={likedVideoIds.has(currentVideo.id) ? "いいね済み" : "いいね！"}
+                  >
+                    <Icon
+                      className={`h-3.5 w-3.5 transition-transform ${
+                        likedVideoIds.has(currentVideo.id) ? "fill-pink-500 stroke-pink-500 scale-110" : ""
+                      }`}
+                    >
+                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
                     </Icon>
-                  ) : (
-                    <Icon className="h-3.5 w-3.5">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </Icon>
-                  )}
-                </button>
+                    <span className="font-mono text-xs font-medium">
+                      {likesMap[currentVideo.id] || 0}
+                    </span>
+                  </button>
+                </div>
               </div>
               {currentVideo.tags.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-1.5">
