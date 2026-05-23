@@ -534,21 +534,27 @@ export default function App() {
 
   const handleLikeVideo = useCallback(
     async (videoId: string) => {
-      if (likedVideoIds.has(videoId) || isLikePending) return;
+      if (isLikePending) return;
 
+      const isLiked = likedVideoIds.has(videoId);
+      const action = isLiked ? "unlike" : "like";
       setIsLikePending(true);
       try {
         const response = await fetch("/api/likes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ video_id: videoId }),
+          body: JSON.stringify({ video_id: videoId, action }),
         });
 
         if (!response.ok) {
           throw new Error("Like POST error");
         }
 
-        const data = (await response.json()) as { success: boolean; new_count: number };
+        const data = (await response.json()) as {
+          success: boolean;
+          action: "like" | "unlike";
+          new_count: number;
+        };
         if (data && data.success) {
           setLikesMap((prev) => ({
             ...prev,
@@ -557,7 +563,11 @@ export default function App() {
 
           setLikedVideoIds((prev) => {
             const next = new Set(prev);
-            next.add(videoId);
+            if (action === "like") {
+              next.add(videoId);
+            } else {
+              next.delete(videoId);
+            }
             try {
               localStorage.setItem("sora_liked_videos", JSON.stringify(Array.from(next)));
             } catch (e) {
@@ -1014,13 +1024,13 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => handleLikeVideo(currentVideo.id)}
-                    disabled={likedVideoIds.has(currentVideo.id) || isLikePending}
+                    disabled={isLikePending}
                     className={`flex shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 transition-all focus:outline-none focus-visible:border-white/40 ${
                       likedVideoIds.has(currentVideo.id)
-                        ? "border-pink-500/30 bg-pink-500/10 text-pink-400 cursor-default"
+                        ? "border-pink-500/30 bg-pink-500/10 text-pink-400 hover:scale-105 hover:bg-pink-500/15"
                         : "border-white/10 bg-white/5 text-white/45 hover:scale-105 hover:bg-white/10 hover:text-white"
                     }`}
-                    title={likedVideoIds.has(currentVideo.id) ? "いいね済み" : "いいね！"}
+                    title={likedVideoIds.has(currentVideo.id) ? "いいねを取り消す" : "いいね！"}
                   >
                     <Icon
                       className={`h-3.5 w-3.5 transition-transform ${

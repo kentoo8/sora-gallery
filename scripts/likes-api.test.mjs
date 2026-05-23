@@ -77,7 +77,11 @@ function createDbMock(initialRows = []) {
         async run() {
           calls.run += 1;
           const videoId = this.bound[0];
-          counts.set(videoId, (counts.get(videoId) ?? 0) + 1);
+          if (sql.includes("UPDATE likes")) {
+            counts.set(videoId, Math.max((counts.get(videoId) ?? 0) - 1, 0));
+          } else {
+            counts.set(videoId, (counts.get(videoId) ?? 0) + 1);
+          }
           return { success: true };
         },
         async first() {
@@ -157,10 +161,60 @@ test("likes POST increments an allowed public video", async () => {
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
       success: true,
+      action: "like",
       video_id: "public-video",
       new_count: 3,
     });
     assert.equal(db.calls.run, 1);
+  });
+});
+
+test("likes POST decrements an allowed public video when unliking", async () => {
+  const { onRequestPost } = await loadLikesModule();
+  const db = createDbMock([{ video_id: "public-video", count: 2 }]);
+  const fetchMock = createFetchMock([{ id: "public-video" }]);
+
+  await withMockedFetch(fetchMock, async () => {
+    const response = await onRequestPost({
+      env: { DB: db },
+      request: createJsonRequest(JSON.stringify({
+        video_id: "public-video",
+        action: "unlike",
+      })),
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      success: true,
+      action: "unlike",
+      video_id: "public-video",
+      new_count: 1,
+    });
+    assert.equal(db.calls.run, 1);
+  });
+});
+
+test("likes POST never decrements below zero", async () => {
+  const { onRequestPost } = await loadLikesModule();
+  const db = createDbMock([{ video_id: "public-video", count: 0 }]);
+  const fetchMock = createFetchMock([{ id: "public-video" }]);
+
+  await withMockedFetch(fetchMock, async () => {
+    const response = await onRequestPost({
+      env: { DB: db },
+      request: createJsonRequest(JSON.stringify({
+        video_id: "public-video",
+        action: "unlike",
+      })),
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      success: true,
+      action: "unlike",
+      video_id: "public-video",
+      new_count: 0,
+    });
   });
 });
 

@@ -127,11 +127,12 @@ curl -i \
 - body が以下の形式である。
 
 ```json
-{
-  "success": true,
-  "video_id": "<VIDEO_ID>",
-  "new_count": 1
-}
+    {
+      "success": true,
+      "action": "like",
+      "video_id": "<VIDEO_ID>",
+      "new_count": 1
+    }
 ```
 
 既に likes がある場合、`new_count` は現在値 + 1 になる。
@@ -147,15 +148,43 @@ curl -s "$BASE_URL/api/likes" | VIDEO_ID="$VIDEO_ID" node -e 'let s="";process.s
 - 数値が表示される。
 - 直前の `POST /api/likes` で返った `new_count` と一致する。
 
-## 7. 画面から確認する
+## 7. 取り消しできることを確認する
+
+この確認は実際に D1 の likes count を `-1` する。直前に実行した like の取り消しとして 1 回だけ行う。
+
+```bash
+curl -i \
+  -X POST "$BASE_URL/api/likes" \
+  -H "Content-Type: application/json" \
+  --data "{\"video_id\":\"$VIDEO_ID\",\"action\":\"unlike\"}"
+```
+
+期待値:
+
+- HTTP status が `200`。
+- body が以下の形式である。
+
+```json
+{
+  "success": true,
+  "action": "unlike",
+  "video_id": "<VIDEO_ID>",
+  "new_count": 0
+}
+```
+
+既に likes がある場合、`new_count` は現在値 - 1 になる。ただし `0` 未満にはならない。
+
+## 8. 画面から確認する
 
 1. `https://sora-gallery.pages.dev/video/<VIDEO_ID>` を開く。
 2. 再生画面に likes ボタンが表示されることを確認する。
 3. ボタンを押す。
 4. カウントが増えることを確認する。
-5. リロード後もカウントが維持されることを確認する。
+5. もう一度ボタンを押す。
+6. カウントが減り、いいね済み表示が解除されることを確認する。
 
-ブラウザの LocalStorage により、同じブラウザでは同じ動画を再度 like できない。再確認したい場合は別の動画 ID を使うか、検証用ブラウザプロファイルを使う。
+ブラウザの LocalStorage により、同じブラウザで押したいいねだけを取り消せる。LocalStorage が消えた場合、そのブラウザでは過去のいいねを取り消せない。
 
 ## 失敗時の切り分け
 

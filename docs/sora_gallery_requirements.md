@@ -235,6 +235,9 @@ type GalleryVideo = {
 - `id` を likes の安定キーとして使う。
 - API は `GET /api/likes` と `POST /api/likes` のみにする。
 - `POST /api/likes` は `public/videos.json` に存在する公開動画 ID のみ受け付ける。
+- `POST /api/likes` は `action: "like"` と `action: "unlike"` を受け付ける。
+- ユーザーはいいね後にもう一度押していいねを取り消せる。
+- 取り消し可否は LocalStorage の liked cache に依存する。cache が消えた場合、そのブラウザでは過去のいいねを自分のものとして判定できないため、取り消しは諦める。
 - likes は動画本体データとは別に `video_id` に紐づける。
 - 一覧カードには likes のボタンや件数を表示しない。
 - 再生画面にのみ likes UI を表示する。

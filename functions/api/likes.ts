@@ -6,6 +6,8 @@ type GalleryVideoRecord = {
   id?: unknown;
 };
 
+type LikeAction = "like" | "unlike";
+
 const VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 const VIDEO_ID_CACHE_TTL_MS = 60_000;
 
@@ -41,6 +43,18 @@ function normalizeVideoId(videoId: unknown): string | null {
   }
 
   return trimmed;
+}
+
+function normalizeLikeAction(action: unknown): LikeAction | null {
+  if (action === undefined || action === "like") {
+    return "like";
+  }
+
+  if (action === "unlike") {
+    return "unlike";
+  }
+
+  return null;
 }
 
 async function loadAllowedVideoIds(request: Request): Promise<Set<string>> {
@@ -168,15 +182,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     );
   }
 
-  // 簡易IPレートリミットの適用
-  const clientIp = context.request.headers.get("CF-Connecting-IP") || "unknown";
-  if (clientIp !== "unknown" && checkRateLimit(clientIp)) {
-    return jsonResponse(
-      { error: "Too many requests. Please wait a moment." },
-      { status: 429 }
-    );
-  }
-
   const body = await parseJsonBody(context.request);
   if (body instanceof Response) {
     return body;
@@ -190,13 +195,33 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       );
     }
 
-    const { video_id: requestedVideoId } = body as { video_id?: unknown };
+    const { video_id: requestedVideoId, action: requestedAction } = body as {
+      video_id?: unknown;
+      action?: unknown;
+    };
     const videoId = normalizeVideoId(requestedVideoId);
+    const action = normalizeLikeAction(requestedAction);
 
     if (!videoId) {
       return jsonResponse(
         { error: "Invalid video_id parameter" },
         { status: 400 }
+      );
+    }
+
+    if (!action) {
+      return jsonResponse(
+        { error: "Invalid action parameter" },
+        { status: 400 }
+      );
+    }
+
+    // 取り消しは「押してすぐ戻す」操作を許すため、簡易レート制限は like のみに適用する。
+    const clientIp = context.request.headers.get("CF-Connecting-IP") || "unknown";
+    if (action === "like" && clientIp !== "unknown" && checkRateLimit(clientIp)) {
+      return jsonResponse(
+        { error: "Too many requests. Please wait a moment." },
+        { status: 429 }
       );
     }
 
@@ -208,20 +233,30 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       );
     }
 
-    // UPSERT クエリ: 存在しなければ 1 で初期化、存在すれば count を +1
-    const { success } = await db
-      .prepare(
-        `INSERT INTO likes (video_id, count, updated_at)
-         VALUES (?1, 1, datetime('now'))
-         ON CONFLICT(video_id) DO UPDATE SET
-           count = count + 1,
-           updated_at = datetime('now')`
-      )
-      .bind(videoId)
-      .run();
+    const { success } =
+      action === "like"
+        ? await db
+            .prepare(
+              `INSERT INTO likes (video_id, count, updated_at)
+               VALUES (?1, 1, datetime('now'))
+               ON CONFLICT(video_id) DO UPDATE SET
+                 count = count + 1,
+                 updated_at = datetime('now')`
+            )
+            .bind(videoId)
+            .run()
+        : await db
+            .prepare(
+              `UPDATE likes
+               SET count = max(count - 1, 0),
+                   updated_at = datetime('now')
+               WHERE video_id = ?1`
+            )
+            .bind(videoId)
+            .run();
 
     if (!success) {
-      throw new Error("Failed to register like inside D1");
+      throw new Error(`Failed to ${action} inside D1`);
     }
 
     // 更新後の最新カウントを取得して返却
@@ -233,8 +268,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     return jsonResponse(
       {
         success: true,
+        action,
         video_id: videoId,
-        new_count: updated ? updated.count : 1,
+        new_count: updated ? updated.count : 0,
       }
     );
   } catch (err: unknown) {

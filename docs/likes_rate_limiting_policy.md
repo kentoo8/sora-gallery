@@ -60,12 +60,12 @@ http.request.uri.path eq "/api/likes" and http.request.method eq "POST"
 注意:
 
 - preview と production の両方に効く場合、preview 確認中の連打で制限に当たる可能性がある。
-- production の通常ユーザーは LocalStorage により同一動画を連打できないため、1分10回でもかなり余裕がある。
+- production の通常ユーザーは LocalStorage により同一動画の like / unlike をトグルするため、1分10回でもかなり余裕がある。
 - しきい値は実アクセスを見て調整する。
 
 ## アプリ側に残すもの
 
-- LocalStorage による同一ブラウザでの重複 like 防止。
+- LocalStorage による同一ブラウザでの liked cache と unlike 判定。
 - Pages Functions 内メモリ Map による 2 秒の簡易 IP ガード。
 - `public/videos.json` の公開動画 ID 許可リスト検証。
 - 壊れた JSON / 不正 ID / 非公開 ID の拒否。
