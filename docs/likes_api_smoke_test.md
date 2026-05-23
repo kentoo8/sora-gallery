@@ -19,7 +19,7 @@ Cloudflare Pages にデプロイされた `sora-gallery` で、Pages Functions +
 - D1 に `schema.sql` が適用済みである。
 - 確認対象 URL は production の `https://sora-gallery.pages.dev` を基本にする。
 
-preview URL で確認する場合は、preview 専用 D1 を作成し、`wrangler.toml` の `env.preview` または Cloudflare dashboard 側の preview binding に設定してから行う。本番 D1 を preview 確認に使い回さない。
+preview URL で確認する場合は、`wrangler.toml` の `env.preview` で設定している preview 専用 D1 `sora-gallery-likes-db-preview` を使う。本番 D1 を preview 確認に使い回さない。
 
 ## 1. 公開動画 ID を 1 件取得する
 
