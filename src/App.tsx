@@ -587,7 +587,9 @@ export default function App() {
             key={`${cameo}-${index}`}
             type="button"
             onClick={() => openSearchGallery(cameo)}
-            className="pointer-events-auto rounded px-1 text-blue-200 transition-colors hover:bg-blue-500/20 hover:text-blue-100 focus:outline-none focus-visible:bg-blue-500/25"
+            className={`rounded px-1 text-blue-200 transition-colors hover:bg-blue-500/20 hover:text-blue-100 focus:outline-none focus-visible:bg-blue-500/25 ${
+              showControls ? "pointer-events-auto" : "pointer-events-none"
+            }`}
             title={`"${cameo}" の検索結果を表示`}
           >
             {cameo}
@@ -603,7 +605,7 @@ export default function App() {
 
       return parts.length > 0 ? parts : prompt;
     },
-    [openSearchGallery],
+    [openSearchGallery, showControls],
   );
 
   useEffect(() => {
@@ -751,11 +753,23 @@ export default function App() {
     const deltaY = touchStartY.current - touchEndY;
     const threshold = 50;
 
-    if (isPlayerOpen && Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > threshold) {
-      if (deltaY > 0) {
-        goToNext();
-      } else {
-        goToPrev();
+    if (isPlayerOpen) {
+      if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > threshold) {
+        if (deltaY > 0) {
+          goToNext();
+        } else {
+          goToPrev();
+        }
+      } else if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
+        const target = event.target as HTMLElement;
+        if (!showControls) {
+          setShowControls(true);
+        } else {
+          const isInteractive = target.closest("button, a, input, [role='button']");
+          if (!isInteractive) {
+            setShowControls(false);
+          }
+        }
       }
     }
 
@@ -853,70 +867,22 @@ export default function App() {
         })}
 
         <div
-          className={`absolute left-5 top-6 z-30 flex flex-col items-start gap-4 transition-opacity duration-300 md:left-8 md:top-8 ${
+          className={`absolute left-5 top-8 z-30 flex flex-col items-center gap-4 transition-all duration-300 md:left-8 md:top-12 ${
             showControls ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
-          {/* ポータルヘッダー: マスコットロゴ ＋ 検索バー */}
-          <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-black/45 p-3 shadow-2xl backdrop-blur-3xl w-64 md:w-72">
-            {/* ロゴボタン（一覧に戻る） */}
-            <button
-              type="button"
-              onClick={openGallery}
-              className="flex items-center gap-2.5 text-left text-sm font-light uppercase tracking-widest text-white/60 transition-colors hover:text-white/90 focus:outline-none"
-              title="ギャラリー一覧に戻る"
-            >
-              <SoraMascotIcon className="h-6 w-6 shrink-0 transition-transform hover:scale-105" />
-              <span className="text-xs font-semibold">Sora Gallery</span>
-            </button>
+          {/* Sora風マスコットアイコン単体ボタン（一番左上） */}
+          <button
+            type="button"
+            onClick={openGallery}
+            className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white shadow-2xl backdrop-blur-3xl transition-all duration-300 hover:scale-110 hover:border-white/20 hover:bg-black/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+            title="ギャラリー一覧に戻る"
+          >
+            <SoraMascotIcon className="h-7 w-7 transition-transform duration-300" />
+          </button>
 
-            {/* 検索バー */}
-            <div className="group/search relative mt-1 w-full">
-              <div className="absolute -inset-0.5 rounded-xl bg-blue-400/20 opacity-0 blur-md transition duration-500 group-focus-within/search:opacity-100" />
-              <div className="relative flex w-full items-center overflow-hidden rounded-xl border border-white/10 bg-white/5">
-                <div className="shrink-0 pl-3 text-white/35">
-                  <Icon className="h-3.5 w-3.5">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </Icon>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search in playback..."
-                  value={searchQuery}
-                  onCompositionStart={() => setIsComposing(true)}
-                  onCompositionEnd={() => setIsComposing(false)}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  onKeyDown={(event) => {
-                    const composing = isComposing || event.nativeEvent.isComposing;
-                    if (event.key === "Enter" && !composing) {
-                      event.preventDefault();
-                      setActiveSearchQuery(event.currentTarget.value);
-                    }
-                  }}
-                  className="h-8 min-w-0 flex-1 border-none bg-transparent px-2.5 text-xs text-white outline-none placeholder:text-white/20"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setActiveSearchQuery("");
-                    }}
-                    className="shrink-0 px-2 text-white/30 transition-colors hover:text-white focus:outline-none"
-                    title="検索をクリア"
-                  >
-                    <Icon className="h-3 w-3">
-                      <path d="M18 6 6 18M6 6l12 12" />
-                    </Icon>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* 縦型の操作パネル（ロゴと少し離して配置: mt-4） */}
-          <div className="mt-4 flex min-w-[54px] flex-col items-center gap-2 rounded-full border border-white/10 bg-black/40 px-2 py-4 shadow-2xl backdrop-blur-3xl md:py-6">
+          {/* 縦型の操作パネル（マスコットアイコンと少し離して配置） */}
+          <div className="flex min-w-[54px] flex-col items-center gap-2 rounded-full border border-white/10 bg-black/40 px-2 py-4 shadow-2xl backdrop-blur-3xl md:py-6">
             <button
               type="button"
               onClick={goToPrev}
@@ -987,7 +953,7 @@ export default function App() {
 
         {currentVideo && (
           <div
-            className={`pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 pt-32 transition-opacity duration-300 md:p-10 md:pb-6 ${
+            className={`pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 pt-32 transition-all duration-300 md:p-10 md:pb-6 ${
               showControls ? "opacity-100" : "opacity-0"
             }`}
           >
@@ -998,10 +964,14 @@ export default function App() {
                 </p>
               )}
               <div className="group/prompt relative mb-2 flex items-start gap-2.5 text-base font-light leading-relaxed text-white drop-shadow-2xl">
-                <div className="pointer-events-auto max-h-40 flex-1 overflow-y-auto pr-1 text-sm leading-6 md:text-base">
+                <div className={`max-h-40 flex-1 overflow-y-auto pr-1 text-sm leading-6 md:text-base ${
+                  showControls ? "pointer-events-auto" : "pointer-events-none"
+                }`}>
                   {renderPromptText(currentVideo.prompt)}
                 </div>
-                <div className="pointer-events-auto flex flex-col gap-2 shrink-0">
+                <div className={`flex flex-col gap-2 shrink-0 ${
+                  showControls ? "pointer-events-auto" : "pointer-events-none"
+                }`}>
                   <button
                     type="button"
                     onClick={handleCopyPrompt}
@@ -1052,7 +1022,9 @@ export default function App() {
                       key={tag}
                       type="button"
                       onClick={() => openTagGallery(tag)}
-                      className="pointer-events-auto rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/75 backdrop-blur-md transition-colors hover:border-blue-300/50 hover:bg-blue-500/25 hover:text-blue-100 focus:outline-none focus-visible:border-blue-200"
+                      className={`rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/75 backdrop-blur-md transition-colors hover:border-blue-300/50 hover:bg-blue-500/25 hover:text-blue-100 focus:outline-none focus-visible:border-blue-200 ${
+                        showControls ? "pointer-events-auto" : "pointer-events-none"
+                      }`}
                     >
                       {tag}
                     </button>
@@ -1081,8 +1053,8 @@ export default function App() {
         <div className="absolute inset-0 bg-black/95 backdrop-blur-3xl" />
         <div className="absolute inset-0 overflow-y-auto">
           <div className="mx-auto max-w-7xl px-5 pb-40 pt-20 md:px-12 md:pt-28">
-            <div className="mb-8 flex items-start justify-between gap-5 md:mb-10">
-              <div className="flex min-w-0 flex-col gap-1">
+            <div className="mb-14 flex flex-col gap-6 md:mb-16 md:flex-row md:items-center md:justify-between md:gap-8">
+              <div className="flex min-w-0 flex-col gap-1.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -1091,10 +1063,14 @@ export default function App() {
                     setActiveTag("");
                     pushGalleryUrl();
                   }}
-                  className="w-fit text-left text-2xl font-light uppercase tracking-widest text-white/55 transition-colors hover:text-white/85 focus:outline-none focus-visible:text-white"
+                  className="flex w-fit items-center gap-3.5 text-left text-2xl font-light uppercase tracking-widest text-white/55 transition-colors hover:text-white/85 focus:outline-none focus-visible:text-white"
                 >
-                  Sora Gallery
+                  <SoraMascotIcon className="h-9 w-9 shrink-0 transition-transform duration-300 hover:scale-110" />
+                  <span>Sora Gallery</span>
                 </button>
+                <p className="text-[10px] font-mono tracking-wider text-white/30">
+                  This is an unofficial website showcasing videos created by @hio1345.
+                </p>
                 {isSearchActive && (
                   <p className="font-mono text-xs text-blue-300">
                     Showing {filteredVideos.length} of {sortedVideos.length}
@@ -1103,37 +1079,82 @@ export default function App() {
                   </p>
                 )}
               </div>
-              <div className="flex shrink-0 items-center rounded-full border border-white/10 bg-white/5 p-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSortOrder((order) => (order === "newest" ? "oldest" : "newest"))
-                  }
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/20 focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
-                  title={
-                    sortOrder === "newest"
-                      ? "現在: 新しい順。クリックで古い順に切り替え"
-                      : "現在: 古い順。クリックで新しい順に切り替え"
-                  }
-                >
-                  {sortOrder === "newest" ? (
-                    <Icon className="h-4 w-4">
-                      <path d="M11 5h8" />
-                      <path d="M11 12h6" />
-                      <path d="M11 19h4" />
-                      <path d="M5 5v14" />
-                      <path d="m2 16 3 3 3-3" />
-                    </Icon>
-                  ) : (
-                    <Icon className="h-4 w-4">
-                      <path d="M11 5h4" />
-                      <path d="M11 12h6" />
-                      <path d="M11 19h8" />
-                      <path d="M5 19V5" />
-                      <path d="m2 8 3-3 3 3" />
-                    </Icon>
-                  )}
-                </button>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5 md:shrink-0">
+                <div className="group/search relative w-full sm:w-80 md:w-96">
+                  <div className="absolute -inset-0.5 rounded-2xl bg-blue-400/20 opacity-0 blur-md transition duration-500 group-focus-within/search:opacity-100" />
+                  <div className="relative flex w-full items-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-md">
+                    <div className="shrink-0 pl-4 text-white/35">
+                      <Icon className="h-4 w-4">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </Icon>
+                    </div>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Search prompts, comments, tags..."
+                      value={searchQuery}
+                      onCompositionStart={() => setIsComposing(true)}
+                      onCompositionEnd={() => setIsComposing(false)}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      onKeyDown={(event) => {
+                        const composing = isComposing || event.nativeEvent.isComposing;
+                        if (event.key === "Enter" && !composing) {
+                          event.preventDefault();
+                          setActiveSearchQuery(event.currentTarget.value);
+                        }
+                      }}
+                      className="h-10 min-w-0 flex-1 border-none bg-transparent px-3 text-sm text-white outline-none placeholder:text-white/25"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setActiveSearchQuery("");
+                        }}
+                        className="shrink-0 px-3 text-white/30 transition-colors hover:text-white focus:outline-none focus-visible:text-white"
+                        title="検索をクリア"
+                      >
+                        <Icon className="h-3.5 w-3.5">
+                          <path d="M18 6 6 18M6 6l12 12" />
+                        </Icon>
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center justify-end rounded-full border border-white/10 bg-white/5 p-1 self-end sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSortOrder((order) => (order === "newest" ? "oldest" : "newest"))
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/20 focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+                    title={
+                      sortOrder === "newest"
+                        ? "現在: 新しい順。クリックで古い順に切り替え"
+                        : "現在: 古い順。クリックで新しい順に切り替え"
+                    }
+                  >
+                    {sortOrder === "newest" ? (
+                      <Icon className="h-4 w-4">
+                        <path d="M11 5h8" />
+                        <path d="M11 12h6" />
+                        <path d="M11 19h4" />
+                        <path d="M5 5v14" />
+                        <path d="m2 16 3 3 3-3" />
+                      </Icon>
+                    ) : (
+                      <Icon className="h-4 w-4">
+                        <path d="M11 5h4" />
+                        <path d="M11 12h6" />
+                        <path d="M11 19h8" />
+                        <path d="M5 19V5" />
+                        <path d="m2 8 3-3 3 3" />
+                      </Icon>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1185,56 +1206,6 @@ export default function App() {
           </div>
         </div>
 
-        <div
-          className="pointer-events-none absolute bottom-0 left-0 right-0 z-[70] flex h-44 items-end justify-center pb-8"
-          onMouseEnter={() => searchInputRef.current?.focus()}
-        >
-          <div className="pointer-events-auto w-full max-w-md px-6">
-            <div className="group/search relative">
-              <div className="absolute -inset-0.5 rounded-2xl bg-blue-400/25 opacity-0 blur-md transition duration-500 group-focus-within/search:opacity-100" />
-              <div className="relative flex w-full items-center overflow-hidden rounded-2xl border border-white/12 bg-black/80 shadow-2xl backdrop-blur-3xl">
-                <div className="shrink-0 pl-5 text-white/35">
-                  <Icon className="h-4 w-4">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </Icon>
-                </div>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search prompts, comments, tags..."
-                  value={searchQuery}
-                  onCompositionStart={() => setIsComposing(true)}
-                  onCompositionEnd={() => setIsComposing(false)}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  onKeyDown={(event) => {
-                    const composing = isComposing || event.nativeEvent.isComposing;
-                    if (event.key === "Enter" && !composing) {
-                      event.preventDefault();
-                      setActiveSearchQuery(event.currentTarget.value);
-                    }
-                  }}
-                  className="h-14 min-w-0 flex-1 border-none bg-transparent px-4 text-sm text-white outline-none placeholder:text-white/25"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setActiveSearchQuery("");
-                    }}
-                    className="shrink-0 px-3 text-white/30 transition-colors hover:text-white focus:outline-none focus-visible:text-white"
-                    title="検索をクリア"
-                  >
-                    <Icon className="h-4 w-4">
-                      <path d="M18 6 6 18M6 6l12 12" />
-                    </Icon>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       {showShortcuts && (
