@@ -55,3 +55,12 @@
 - 次回避けること: ローカルサーバー起動コマンドを通常実行して port bind で失敗させない。
 - 次回の推奨手順: `npm run dev`、`npm run preview` など port bind を伴うコマンドは最初から権限付きで実行する。
 - 秘密情報: なし。トークン、Cookie、認証コード、秘密鍵は記録しない。
+
+### sora-player 型チェックの tsbuildinfo 書き込み失敗
+
+- 発生日: 2026-05-23
+- コマンド: `/Users/kentaokazaki/src/sora-player` で `npx tsc --noEmit`
+- エラー概要: `sora-gallery` から作業している Codex sandbox では `/Users/kentaokazaki/src/sora-player` が writable root 外であり、`tsconfig.tsbuildinfo` への書き込みが `EPERM` で失敗した。
+- 次回避けること: `sora-player` 側で `tsconfig.tsbuildinfo` を更新する可能性がある検証コマンドを通常実行して失敗させない。
+- 次回の推奨手順: `npx tsc --noEmit` などの検証コマンドは、`sora-player` が writable root 外の場合は最初から権限付きで実行する。
+- 秘密情報: なし。トークン、Cookie、認証コード、秘密鍵は記録しない。
