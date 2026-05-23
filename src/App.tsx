@@ -1,6 +1,7 @@
 import {
   Fragment,
   memo,
+  type MouseEvent,
   type ReactNode,
   type TouchEvent,
   useCallback,
@@ -150,6 +151,10 @@ function pushGalleryUrl() {
   window.history.pushState({}, "", "/");
 }
 
+function isMobilePointer() {
+  return window.matchMedia("(hover: none), (pointer: coarse)").matches;
+}
+
 function Icon({
   children,
   className = "h-5 w-5",
@@ -290,6 +295,7 @@ export default function App() {
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+  const suppressNextPlayerClick = useRef(false);
   const currentVideoIdRef = useRef<string | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
 
@@ -755,26 +761,41 @@ export default function App() {
 
     if (isPlayerOpen) {
       if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > threshold) {
+        suppressNextPlayerClick.current = true;
         if (deltaY > 0) {
           goToNext();
         } else {
           goToPrev();
-        }
-      } else if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
-        const target = event.target as HTMLElement;
-        if (!showControls) {
-          setShowControls(true);
-        } else {
-          const isInteractive = target.closest("button, a, input, [role='button']");
-          if (!isInteractive) {
-            setShowControls(false);
-          }
         }
       }
     }
 
     touchStartX.current = null;
     touchStartY.current = null;
+  };
+
+  const handlePlayerClick = (event: MouseEvent<HTMLElement>) => {
+    if (!isPlayerOpen) return;
+    if (!isMobilePointer()) return;
+
+    if (suppressNextPlayerClick.current) {
+      suppressNextPlayerClick.current = false;
+      return;
+    }
+
+    const target = event.target as HTMLElement;
+    const isInteractive = Boolean(
+      target.closest("button, a, input, textarea, select, label, [role='button']"),
+    );
+
+    if (!showControls) {
+      setShowControls(true);
+      return;
+    }
+
+    if (!isInteractive) {
+      setShowControls(false);
+    }
   };
 
   const renderVideos = useMemo(() => {
@@ -836,6 +857,7 @@ export default function App() {
     >
       <section
         hidden={!isPlayerOpen}
+        onClickCapture={handlePlayerClick}
         className={`absolute inset-0 bg-black transition-opacity duration-150 ${
           isPlayerOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
