@@ -79,6 +79,17 @@ async function loadAllowedVideoIds(request: Request): Promise<Set<string>> {
   return ids;
 }
 
+async function parseJsonBody(request: Request): Promise<unknown | Response> {
+  try {
+    return await request.json();
+  } catch {
+    return jsonResponse(
+      { error: "Invalid JSON body" },
+      { status: 400 }
+    );
+  }
+}
+
 /**
  * 簡易IPレートリミット判定
  * 同じIPアドレスから連続してリクエストが来た場合に制限する
@@ -166,9 +177,21 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     );
   }
 
+  const body = await parseJsonBody(context.request);
+  if (body instanceof Response) {
+    return body;
+  }
+
   try {
-    const body = (await context.request.json()) as { video_id?: unknown };
-    const videoId = normalizeVideoId(body.video_id);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return jsonResponse(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+
+    const { video_id: requestedVideoId } = body as { video_id?: unknown };
+    const videoId = normalizeVideoId(requestedVideoId);
 
     if (!videoId) {
       return jsonResponse(
