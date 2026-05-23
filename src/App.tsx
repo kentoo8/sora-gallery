@@ -173,6 +173,36 @@ function Icon({
   );
 }
 
+function SoraMascotIcon({ className = "h-8 w-8" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M50 20C38 20 28 28 28 40C16 40 10 48 10 58C10 68 18 76 28 76H72C82 76 90 68 90 58C90 48 84 40 72 40C72 28 62 20 50 20Z"
+        fill="white"
+        fillOpacity="0.85"
+      />
+      <ellipse cx="42" cy="48" rx="6" ry="10" fill="#1e293b" />
+      <path
+        d="M42 41.5L43.2 43.5L45.5 43.5L43.7 44.7L44.5 47L42 45.7L39.5 47L40.3 44.7L38.5 43.5L40.8 43.5Z"
+        fill="white"
+      />
+      <circle cx="44.5" cy="53" r="1.5" fill="white" />
+      <ellipse cx="58" cy="48" rx="6" ry="10" fill="#1e293b" />
+      <path
+        d="M58 41.5L59.2 43.5L61.5 43.5L59.7 44.7L60.5 47L58 45.7L55.5 47L56.3 44.7L54.5 43.5L56.8 43.5Z"
+        fill="white"
+      />
+      <circle cx="60.5" cy="53" r="1.5" fill="white" />
+    </svg>
+  );
+}
+
 const ThumbnailCard = memo(function ThumbnailCard({
   video,
   isActive,
@@ -823,11 +853,70 @@ export default function App() {
         })}
 
         <div
-          className={`absolute left-5 top-8 z-30 transition-opacity duration-300 md:left-8 md:top-12 ${
+          className={`absolute left-5 top-6 z-30 flex flex-col items-start gap-4 transition-opacity duration-300 md:left-8 md:top-8 ${
             showControls ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
-          <div className="flex min-w-[54px] flex-col items-center gap-2 rounded-full border border-white/10 bg-black/40 px-2 py-4 shadow-2xl backdrop-blur-3xl md:py-6">
+          {/* ポータルヘッダー: マスコットロゴ ＋ 検索バー */}
+          <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-black/45 p-3 shadow-2xl backdrop-blur-3xl w-64 md:w-72">
+            {/* ロゴボタン（一覧に戻る） */}
+            <button
+              type="button"
+              onClick={openGallery}
+              className="flex items-center gap-2.5 text-left text-sm font-light uppercase tracking-widest text-white/60 transition-colors hover:text-white/90 focus:outline-none"
+              title="ギャラリー一覧に戻る"
+            >
+              <SoraMascotIcon className="h-6 w-6 shrink-0 transition-transform hover:scale-105" />
+              <span className="text-xs font-semibold">Sora Gallery</span>
+            </button>
+
+            {/* 検索バー */}
+            <div className="group/search relative mt-1 w-full">
+              <div className="absolute -inset-0.5 rounded-xl bg-blue-400/20 opacity-0 blur-md transition duration-500 group-focus-within/search:opacity-100" />
+              <div className="relative flex w-full items-center overflow-hidden rounded-xl border border-white/10 bg-white/5">
+                <div className="shrink-0 pl-3 text-white/35">
+                  <Icon className="h-3.5 w-3.5">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </Icon>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search in playback..."
+                  value={searchQuery}
+                  onCompositionStart={() => setIsComposing(true)}
+                  onCompositionEnd={() => setIsComposing(false)}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    const composing = isComposing || event.nativeEvent.isComposing;
+                    if (event.key === "Enter" && !composing) {
+                      event.preventDefault();
+                      setActiveSearchQuery(event.currentTarget.value);
+                    }
+                  }}
+                  className="h-8 min-w-0 flex-1 border-none bg-transparent px-2.5 text-xs text-white outline-none placeholder:text-white/20"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setActiveSearchQuery("");
+                    }}
+                    className="shrink-0 px-2 text-white/30 transition-colors hover:text-white focus:outline-none"
+                    title="検索をクリア"
+                  >
+                    <Icon className="h-3 w-3">
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </Icon>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 縦型の操作パネル（ロゴと少し離して配置: mt-4） */}
+          <div className="mt-4 flex min-w-[54px] flex-col items-center gap-2 rounded-full border border-white/10 bg-black/40 px-2 py-4 shadow-2xl backdrop-blur-3xl md:py-6">
             <button
               type="button"
               onClick={goToPrev}
@@ -858,17 +947,6 @@ export default function App() {
               </Icon>
             </button>
             <div className="my-1 h-px w-6 bg-white/10" />
-            <button
-              type="button"
-              onClick={openGallery}
-              className="toolbar-button"
-              title="Gallery"
-            >
-              <Icon>
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </Icon>
-            </button>
             <button
               type="button"
               onClick={randomVideo}
