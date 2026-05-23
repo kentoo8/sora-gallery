@@ -64,3 +64,12 @@
 - 次回避けること: `sora-player` 側で `tsconfig.tsbuildinfo` を更新する可能性がある検証コマンドを通常実行して失敗させない。
 - 次回の推奨手順: `npx tsc --noEmit` などの検証コマンドは、`sora-player` が writable root 外の場合は最初から権限付きで実行する。
 - 秘密情報: なし。トークン、Cookie、認証コード、秘密鍵は記録しない。
+
+### rclone copyto の bucket 作成確認による R2 403
+
+- 発生日: 2026-05-23
+- コマンド: `rclone copyto /private/tmp/.../948d5b80-c9a6-4827-8b94-0427507606c3.mp4 r2:sora-gallery-media/videos/948d5b80-c9a6-4827-8b94-0427507606c3.mp4`
+- エラー概要: bucket 限定の R2 token では bucket 作成や存在確認に必要な権限がなく、`S3: CreateBucket` が `AccessDenied` になった。
+- 次回避けること: R2 bucket 限定 token で `copyto` をそのまま実行し、bucket 作成確認を発生させない。
+- 次回の推奨手順: 単一 object を R2 にアップロードする場合は `--s3-no-check-bucket` を付けるか、既に成功している `rclone copy <dir> r2:sora-gallery-media/<prefix>` 形式を使う。
+- 秘密情報: なし。トークン、Cookie、認証コード、秘密鍵は記録しない。

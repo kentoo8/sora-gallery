@@ -222,6 +222,13 @@ rclone copy /path/to/generated-upload/videos r2:sora-gallery-media/videos
 rclone copy /path/to/generated-upload/thumbnails r2:sora-gallery-media/thumbnails
 ```
 
+単一 object だけを追加アップロードする場合は、bucket 限定 token で bucket 存在確認が `AccessDenied` になることがあるため、`--s3-no-check-bucket` を付ける。
+
+```bash
+rclone copyto /path/to/video.mp4 r2:sora-gallery-media/videos/{publicId}.mp4 --s3-no-check-bucket
+rclone copyto /path/to/thumbnail.webp r2:sora-gallery-media/thumbnails/{publicId}.webp --s3-no-check-bucket
+```
+
 確認例:
 
 ```bash
