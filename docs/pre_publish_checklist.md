@@ -53,6 +53,8 @@ npm run build
 - Build command: `npm run build`
 - Build output directory: `dist`
 - 初期リリースでは Pages Functions / Workers は使わない。
+- Cloudflare dashboard の Workers & Pages 画面にある `Upload your static files` / `Worker name` フローは使わない。
+- 公開は `wrangler pages deploy dist --project-name sora-gallery` を正とする。
 - push は Codex からは行わない。
 - Cloudflare Pages の公開後、以下を確認する。
   - `/` が表示できる。

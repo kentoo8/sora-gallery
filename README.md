@@ -24,6 +24,7 @@ See `docs/examples/videos.example.json` for a complete example.
 See `docs/sora_player_export_requirements.md` for the planned export boundary from `sora-player`.
 See `docs/r2_publish_runbook.md` for the R2 publishing runbook.
 See `docs/pre_publish_checklist.md` for the pre-publish checklist.
+See `docs/cloudflare_pages_deploy.md` for the Cloudflare Pages deployment procedure.
 
 ```ts
 type GalleryVideo = {
