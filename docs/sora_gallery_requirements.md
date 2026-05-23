@@ -209,7 +209,8 @@ type GalleryVideo = {
 - 非公開化や削除は `public/videos.json` から除外する運用とする。
 - 個別動画の一時的な非公開化は、`sora-player` 側で `meta:no-public` を付け、次回 export で除外する。
 - タグ単位の非公開化は、`sora-player/data/gallery-export-config.json` の `excludeTags` で管理する。
-- 本当に取り下げる場合は、必要に応じて R2 の動画本体とサムネイルも削除する。
+- 公開対象から外した動画は、原則として R2 の動画本体とサムネイルも削除する。
+- manifest の対象 entry は、再公開時に同じ公開 ID を使えるように残す。
 - Cloudflare CDN にキャッシュが残る場合は、必要に応じて purge する。
 
 ## Cloudflare Pages

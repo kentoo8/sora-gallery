@@ -89,6 +89,8 @@ type GalleryVideo = {
 - `sora-player` 側で「公開対象」だけを export する。
 - `sora-gallery` 側には `visibility`, `private`, `deletedAt` を持たせない。
 - 非公開化や削除は次回 export で `videos.json` から除外する。
+- 公開対象から外した動画は、R2 の動画本体とサムネイルも削除する運用とする。
+- 非公開の manifest entry は、再公開時の公開 ID 維持のため残す。
 
 通常運用では、`sora-player/data/gallery-export-config.json` に公開対象と除外対象をまとめる。この実設定は非公開ファイルとして Git 管理しない。コミットするのは `data/gallery-export-config.example.json` のような例だけにする。
 

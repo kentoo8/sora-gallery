@@ -173,8 +173,9 @@ thumbnails/{publicId}.webp
 1. `sora-player` で公開対象タグ、`meta:no-public`、タグ単位の除外設定を更新する。
 2. 同じ manifest を使って export する。
 3. 新規または変更された object key のファイルを R2 にアップロードする。
-4. `sora-gallery` で `npm run validate:data` と `npm run build` を実行する。
-5. `public/videos.json` をコミットする。
+4. 今回の `public/videos.json` から外れた動画の R2 object を削除する。
+5. `sora-gallery` で `npm run validate:data` と `npm run build` を実行する。
+6. `public/videos.json` をコミットする。
 
 既存動画の公開 ID は manifest で維持する。manifest を消すと個別 URL と将来の likes キーが変わるため、公開後は消さない。
 
@@ -290,18 +291,27 @@ https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/2ef13128-00a8-46e
 
 ## 非公開化・削除
 
-一時的に一覧から外すだけなら、次回 export で `public/videos.json` から除外する。
+公開対象から外した動画は、次回 export で `public/videos.json` から除外し、R2 の動画本体とサムネイルも削除する。
 
 個別動画を外す場合は、`sora-player` で `meta:no-public` タグを付ける。タグ全体を外す場合は、`data/gallery-export-config.json` の `excludeTags` に追加する。`meta:` prefix は export 制御用として予約し、`public/videos.json` には出力しない。
 
-本当に取り下げる場合は以下も行う。
+削除時は以下を行う。
 
 1. `public/videos.json` から対象動画を除外する。
 2. R2 から動画本体とサムネイルを削除する。
 3. 必要に応じて Cloudflare cache purge を行う。
 4. 個別 URL が 404 または意図した応答になることを確認する。
 
-manifest の対象 entry は、再公開の可能性があるなら残す。完全削除したい場合だけ、別途判断して削除する。
+削除コマンド例:
+
+```bash
+rclone deletefile r2:sora-gallery-media/videos/{publicId}.mp4
+rclone deletefile r2:sora-gallery-media/thumbnails/{publicId}.webp
+```
+
+複数件をまとめて削除する場合は、削除対象リストを作り、実行前に object key が公開 ID ベースの `videos/...` と `thumbnails/...` だけであることを確認する。
+
+manifest の対象 entry は、再公開時に同じ公開 ID を使えるように残す。manifest entry を消すのは、ローカル動画自体を完全に捨て、個別 URL と将来の likes キーも維持しないと決めた場合だけにする。
 
 ## セキュリティ・プライバシー確認
 
