@@ -21,6 +21,19 @@ Cloudflare Pages にデプロイされた `sora-gallery` で、Pages Functions +
 
 preview URL で確認する場合は、`wrangler.toml` の `env.preview` で設定している preview 専用 D1 `sora-gallery-likes-db-preview` を使う。本番 D1 を preview 確認に使い回さない。
 
+preview D1 の確認では production branch である `main` ではなく、非 production branch 名を指定して deploy する。
+
+```bash
+npx wrangler pages deploy dist --project-name sora-gallery --branch preview-d1-smoke
+```
+
+この場合、以下のような preview URL / alias URL が発行される。
+
+```text
+https://<deployment-id>.sora-gallery.pages.dev
+https://preview-d1-smoke.sora-gallery.pages.dev
+```
+
 ## 1. 公開動画 ID を 1 件取得する
 
 ```bash

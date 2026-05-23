@@ -56,6 +56,7 @@ npm run build
 - production の D1 に `schema.sql` が適用済みである。
 - `docs/likes_api_smoke_test.md` に従って実環境疎通確認を行う。
 - preview URL で likes を確認する場合は、本番 D1 ではなく preview 専用 D1 を使う。
+- preview D1 の確認では `--branch preview-d1-smoke` のような非 production branch 名で deploy する。
 
 ## Cloudflare Pages 公開時の注意
 

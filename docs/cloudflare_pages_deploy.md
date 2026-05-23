@@ -10,11 +10,21 @@ Cloudflare dashboard の Workers & Pages 画面にある `Upload your static fil
 
 ## デプロイ
 
+production に反映する場合:
+
 ```bash
 cd /Users/kentaokazaki/src/sora-gallery
 npm run validate:remote
 npm run build
 npx wrangler pages deploy dist --project-name sora-gallery
+```
+
+preview 環境として確認する場合:
+
+```bash
+cd /Users/kentaokazaki/src/sora-gallery
+npm run build
+npx wrangler pages deploy dist --project-name sora-gallery --branch preview-d1-smoke
 ```
 
 重要:
@@ -24,6 +34,8 @@ npx wrangler pages deploy dist --project-name sora-gallery
 - `dist` は build 済みの静的公開物である。
 - 初回に project 作成を聞かれたら作成する。
 - production branch を聞かれたら `main` を指定する。
+- preview D1 の確認では、production branch である `main` ではなく、`--branch preview-d1-smoke` のような非 production branch 名で deploy する。
+- `wrangler pages deploy dist --project-name sora-gallery` は production deployment として扱われるため、preview D1 の疎通確認には使わない。
 
 ## 初回デプロイ結果
 
