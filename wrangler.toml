@@ -8,3 +8,10 @@ pages_build_output_dir = "dist"
 binding = "DB" # Pages Functions で context.env.DB としてアクセスする名前
 database_name = "sora-gallery-likes-db"
 database_id = "758637c8-80df-4e63-a94f-9049973c2984"
+
+# Preview 環境で likes を動かす場合は、本番 DB を使い回さず、
+# 別途 preview 用 D1 を作成して以下のように env.preview で上書きする。
+# [[env.preview.d1_databases]]
+# binding = "DB"
+# database_name = "sora-gallery-likes-db-preview"
+# database_id = "<preview-d1-database-id>"
