@@ -2,9 +2,82 @@ interface Env {
   DB: D1Database;
 }
 
+type GalleryVideoRecord = {
+  id?: unknown;
+};
+
+const VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+const VIDEO_ID_CACHE_TTL_MS = 60_000;
+
+let allowedVideoIdsCache:
+  | {
+      expiresAt: number;
+      ids: Set<string>;
+    }
+  | undefined;
+
 // サーバーレスインスタンス内の簡易IPキャッシュ
 const ipCache = new Map<string, number>();
 const RATE_LIMIT_WINDOW_MS = 2000; // 2秒
+
+function jsonResponse(body: unknown, init?: ResponseInit): Response {
+  const headers = new Headers(init?.headers);
+  headers.set("Content-Type", "application/json");
+
+  return new Response(JSON.stringify(body), {
+    ...init,
+    headers,
+  });
+}
+
+function normalizeVideoId(videoId: unknown): string | null {
+  if (typeof videoId !== "string") {
+    return null;
+  }
+
+  const trimmed = videoId.trim();
+  if (!VIDEO_ID_PATTERN.test(trimmed)) {
+    return null;
+  }
+
+  return trimmed;
+}
+
+async function loadAllowedVideoIds(request: Request): Promise<Set<string>> {
+  const now = Date.now();
+  if (allowedVideoIdsCache && allowedVideoIdsCache.expiresAt > now) {
+    return allowedVideoIdsCache.ids;
+  }
+
+  const videosUrl = new URL("/videos.json", request.url);
+  const response = await fetch(videosUrl.toString(), {
+    headers: { Accept: "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to load public video list: ${response.status}`);
+  }
+
+  const videos = (await response.json()) as unknown;
+  if (!Array.isArray(videos)) {
+    throw new Error("public videos list is not an array");
+  }
+
+  const ids = new Set<string>();
+  for (const video of videos as GalleryVideoRecord[]) {
+    const id = normalizeVideoId(video.id);
+    if (id) {
+      ids.add(id);
+    }
+  }
+
+  allowedVideoIdsCache = {
+    expiresAt: now + VIDEO_ID_CACHE_TTL_MS,
+    ids,
+  };
+
+  return ids;
+}
 
 /**
  * 簡易IPレートリミット判定
@@ -36,36 +109,41 @@ function checkRateLimit(ip: string): boolean {
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const db = context.env.DB;
   if (!db) {
-    return new Response(
-      JSON.stringify({ error: "D1 Database configuration (DB binding) is missing" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+    return jsonResponse(
+      { error: "D1 Database configuration (DB binding) is missing" },
+      { status: 500 }
     );
   }
 
   try {
+    const allowedVideoIds = await loadAllowedVideoIds(context.request);
+
     // 全てのいいねレコードを取得
-    const { results } = await db.prepare("SELECT video_id, count FROM likes").all();
+    const { results } = await db.prepare("SELECT video_id, count FROM likes").all<{
+      video_id: string;
+      count: number;
+    }>();
     
     // クライアント側で処理しやすいように { [video_id]: count } のオブジェクト形式に変換
     const likesMap: Record<string, number> = {};
     if (results) {
       for (const row of results) {
-        const videoId = row.video_id as string;
-        const count = row.count as number;
-        likesMap[videoId] = count;
+        if (allowedVideoIds.has(row.video_id)) {
+          likesMap[row.video_id] = row.count;
+        }
       }
     }
 
-    return new Response(JSON.stringify({ likes: likesMap }), {
+    return jsonResponse({ likes: likesMap }, {
       headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=10", // 10秒間のエッジキャッシュを許容
+        "Cache-Control": "no-store",
       },
     });
-  } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message || "Failed to fetch likes" }), {
+  } catch (err: unknown) {
+    return jsonResponse({
+      error: err instanceof Error ? err.message : "Failed to fetch likes",
+    }, {
       status: 500,
-      headers: { "Content-Type": "application/json" },
     });
   }
 };
@@ -73,29 +151,37 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const db = context.env.DB;
   if (!db) {
-    return new Response(
-      JSON.stringify({ error: "D1 Database configuration (DB binding) is missing" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+    return jsonResponse(
+      { error: "D1 Database configuration (DB binding) is missing" },
+      { status: 500 }
     );
   }
 
   // 簡易IPレートリミットの適用
   const clientIp = context.request.headers.get("CF-Connecting-IP") || "unknown";
   if (clientIp !== "unknown" && checkRateLimit(clientIp)) {
-    return new Response(
-      JSON.stringify({ error: "Too many requests. Please wait a moment." }),
-      { status: 429, headers: { "Content-Type": "application/json" } }
+    return jsonResponse(
+      { error: "Too many requests. Please wait a moment." },
+      { status: 429 }
     );
   }
 
   try {
     const body = (await context.request.json()) as { video_id?: unknown };
-    const videoId = body.video_id;
+    const videoId = normalizeVideoId(body.video_id);
 
-    if (!videoId || typeof videoId !== "string" || videoId.trim() === "") {
-      return new Response(
-        JSON.stringify({ error: "Invalid video_id parameter" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+    if (!videoId) {
+      return jsonResponse(
+        { error: "Invalid video_id parameter" },
+        { status: 400 }
+      );
+    }
+
+    const allowedVideoIds = await loadAllowedVideoIds(context.request);
+    if (!allowedVideoIds.has(videoId)) {
+      return jsonResponse(
+        { error: "video_id is not in the public video list" },
+        { status: 404 }
       );
     }
 
@@ -108,7 +194,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
            count = count + 1,
            updated_at = datetime('now')`
       )
-      .bind(videoId.trim())
+      .bind(videoId)
       .run();
 
     if (!success) {
@@ -118,23 +204,20 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     // 更新後の最新カウントを取得して返却
     const updated = await db
       .prepare("SELECT count FROM likes WHERE video_id = ?1")
-      .bind(videoId.trim())
+      .bind(videoId)
       .first<{ count: number }>();
 
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      {
         success: true,
         video_id: videoId,
         new_count: updated ? updated.count : 1,
-      }),
-      {
-        headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (err: any) {
-    return new Response(
-      JSON.stringify({ error: err.message || "Failed to submit like" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+  } catch (err: unknown) {
+    return jsonResponse(
+      { error: err instanceof Error ? err.message : "Failed to submit like" },
+      { status: 500 }
     );
   }
 };
