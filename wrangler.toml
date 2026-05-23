@@ -1,6 +1,8 @@
 # Cloudflare Pages / Wrangler configuration for local emulation
 name = "sora-gallery"
 compatibility_date = "2024-04-01"
+pages_build_output_dir = "dist"
+
 
 [[d1_databases]]
 binding = "DB" # Pages Functions で context.env.DB としてアクセスする名前
