@@ -9,12 +9,14 @@
 ## 初期リリースの前提
 
 - Vite + React + TypeScript で実装する。
-- Cloudflare Pages に完全静的サイトとしてデプロイする。
-- Cloudflare Pages Functions / Workers は初期リリースでは使わない。
+- Cloudflare Pages にデプロイする。
+- 一覧、検索、再生、タグ絞り込みは静的 `public/videos.json` を正としてクライアント側で処理する。
+- 例外として、いいね機能のみ Cloudflare Pages Functions + D1 を使う。
 - 公開用データは `public/videos.json` を正とする。
 - 動画とサムネイルは R2 などに置いた `https://...` の絶対公開 URL のみを使う。
-- DB、認証、書き込み API、管理画面、いいね機能は初期リリースでは入れない。
-- 初期リリース後、いいね機能は Cloudflare Workers + DB で早めに検討する。
+- DB は likes の集計用 D1 のみに限定する。
+- 書き込み API は `POST /api/likes` のみに限定する。
+- 認証、管理画面、ローカル管理用 API は初期リリースでは入れない。
 
 ## UI 方針
 
@@ -48,9 +50,9 @@
 - 任意ローカルパス指定。
 - `generations.json` / `account.json` の生データ利用。
 - サムネイルの Canvas 生成とサーバー保存。
-- DB。
+- 動画データ用 DB。
 - 認証。
-- 書き込み API。
+- likes 以外の書き込み API。
 
 ## 一覧画面
 
@@ -204,7 +206,7 @@ type GalleryVideo = {
 - 内部管理タグ。
 - 非公開にしたい prompt / description。
 - Finder 連携に必要な ID やパス情報。
-- 書き込み API、管理 API、ローカルファイル操作。
+- likes 以外の書き込み API、管理 API、ローカルファイル操作。
 
 ## 非公開化・削除
 
@@ -219,25 +221,30 @@ type GalleryVideo = {
 
 ## Cloudflare Pages
 
-- 初期リリースは完全静的サイトとして Cloudflare Pages にデプロイする。
-- Pages Functions / Workers は初期リリースでは使わない。
+- Cloudflare Pages にデプロイする。
+- Pages Functions は likes API のみに使う。
 - `public/videos.json` をクライアントから fetch する。
+- 検索、一覧、タグ絞り込み、再生画面の動画データは DB 化しない。
 
 ## 将来検討
 
 ### likes
 
-- 初期リリースには入れない。
-- 公開直後の優先検討事項とする。
-- Cloudflare Workers + DB で実装する方針。
-- 初期 UI には likes のダミー表示や余白を置かない。
+- 初期リリースに含める。
+- Cloudflare Pages Functions + D1 で実装する。
 - `id` を likes の安定キーとして使う。
+- API は `GET /api/likes` と `POST /api/likes` のみにする。
+- `POST /api/likes` は `public/videos.json` に存在する公開動画 ID のみ受け付ける。
+- likes は動画本体データとは別に `video_id` に紐づける。
+- 一覧カードには likes のボタンや件数を表示しない。
+- 再生画面にのみ likes UI を表示する。
+- likes は軽量な反応機能であり、厳密な投票・ランキング・課金・審査の根拠には使わない。
 
 ### DB
 
-- しばらくは `public/videos.json` 運用でよい。
+- 動画本体データはしばらく `public/videos.json` 運用でよい。
 - 将来 DB 化する場合も、`public/videos.json` のスキーマを原型として扱う。
-- likes は動画本体データとは別に `videoId` に紐づける。
+- likes 用 D1 は動画本体 DB とは別の最小集計 DB として扱う。
 
 ### 管理・export
 
@@ -247,5 +254,5 @@ type GalleryVideo = {
 
 ### Workers
 
-- Workers を使う場合は、まず likes 用の最小 API から始める。
+- Pages Functions / Workers 系の動的機能は likes 用の最小 API から始める。
 - 検索や動画一覧配信は当面静的 `public/videos.json` のままとする。

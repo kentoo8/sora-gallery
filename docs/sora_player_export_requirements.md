@@ -4,7 +4,9 @@
 
 `sora-player` はローカル管理・選別用アプリであり、`sora-gallery` へ公開用データを export する責務を持つ。
 
-`sora-gallery` は export 済みの `public/videos.json` と公開 URL を読むだけにする。`sora-gallery` 側にローカルファイルシステム、管理画面、書き込み API、認証を持ち込まない。
+`sora-gallery` は export 済みの `public/videos.json` と公開 URL を読む。`sora-gallery` 側にローカルファイルシステム、管理画面、認証、ローカル管理用の書き込み API は持ち込まない。
+
+例外として、公開ユーザー向けの likes API は `sora-gallery` 側の Pages Functions + D1 で扱う。likes は動画本体データや公開対象選別とは分離し、`public/videos.json` の `id` を安定キーとして参照する。
 
 ## export の目的
 
@@ -195,8 +197,8 @@ npm run build
 ## 初期実装でやらないこと
 
 - `sora-gallery` 側の管理画面。
-- `sora-gallery` 側の書き込み API。
+- `sora-gallery` 側の likes 以外の書き込み API。
 - `sora-gallery` 側の認証。
-- likes / Workers / DB。
+- 動画本体データ用 DB。
 - 公開サイトからのタグ編集。
 - 公開サイトからの R2 アップロード。

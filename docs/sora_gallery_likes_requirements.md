@@ -2,7 +2,7 @@
 
 ## 1. 概要
 `sora-gallery` に公開されている各動画に対し、ユーザーが「いいね（Like）」を送信・表示できる機能を追加する。
-初期リリースである完全静的サイトの構成を活かしつつ、Cloudflareエコシステムを活用したミニマムかつスケーラブルなサーバーレス構成（Cloudflare Pages Functions + Cloudflare D1）を採用する。
+静的ギャラリーを基本とする構成を保ちつつ、Cloudflareエコシステムを活用したミニマムかつスケーラブルなサーバーレス構成（Cloudflare Pages Functions + Cloudflare D1）を採用する。
 
 ## 2. システム構成・アーキテクチャ
 
