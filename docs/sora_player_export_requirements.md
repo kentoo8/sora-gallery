@@ -98,10 +98,10 @@ type GalleryVideo = {
 {
   "version": 1,
   "publicBaseUrl": "https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev",
-  "includeTags": ["高木ゆい"],
+  "includeTags": ["高木ゆい", "meta:public"],
   "excludeTags": ["meta:no-public", "ぼっちざろっく！", "けいおん！"],
   "privateTagPrefixes": ["meta:"],
-  "allowedMetaTags": ["meta:no-public"]
+  "allowedMetaTags": ["meta:public", "meta:no-public"]
 }
 ```
 
@@ -109,7 +109,10 @@ type GalleryVideo = {
 
 - `includeTags` のいずれかが付いた動画だけを公開候補にする。
 - `excludeTags` のいずれかが付いた動画は、公開候補であっても除外する。
+- `meta:public` は個別動画を公開候補に入れるためのローカル制御タグとする。
 - `meta:no-public` は個別動画を公開対象から外すためのローカル制御タグとする。
+- `meta:public` と `meta:no-public` が同じ動画に付いている場合は、意図が矛盾しているため export を失敗させる。
+- 通常タグによる include / exclude の競合は矛盾とは扱わず、exclude を優先する。
 - `meta:` は予約 prefix とし、一般公開タグとして使わない。
 - 公開候補に `allowedMetaTags` 以外の `meta:*` タグが付いている場合、export は失敗させる。
 - `meta:*` タグは `public/videos.json` の `tags` には出力しない。

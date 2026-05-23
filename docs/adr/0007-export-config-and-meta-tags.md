@@ -18,7 +18,10 @@ Accepted
 - コミットするのは `data/gallery-export-config.example.json` のような例だけにする。
 - `includeTags` のいずれかが付いた動画だけを公開候補にする。
 - `excludeTags` のいずれかが付いた動画は公開候補であっても除外する。
+- `meta:public` は個別動画を公開候補に入れるためのローカル制御タグとする。
 - `meta:no-public` は個別動画を公開対象から外すためのローカル制御タグとする。
+- `meta:public` と `meta:no-public` が同じ動画に付いている場合は、意図が矛盾しているため export を失敗させる。
+- 通常タグによる include / exclude の競合は矛盾とは扱わず、exclude を優先する。
 - `meta:` は予約 prefix とし、公開タグとしては出力しない。
 - 公開候補に許可されていない `meta:*` タグが付いている場合、export は失敗させる。
 

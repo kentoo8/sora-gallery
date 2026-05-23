@@ -98,10 +98,10 @@ thumbnails/{publicId}.webp
    {
      "version": 1,
      "publicBaseUrl": "https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev",
-     "includeTags": ["高木ゆい"],
+     "includeTags": ["高木ゆい", "meta:public"],
      "excludeTags": ["meta:no-public", "ぼっちざろっく！", "けいおん！"],
      "privateTagPrefixes": ["meta:"],
-     "allowedMetaTags": ["meta:no-public"]
+     "allowedMetaTags": ["meta:public", "meta:no-public"]
    }
    ```
 
