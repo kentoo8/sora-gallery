@@ -60,6 +60,7 @@ https://4531bb51.sora-gallery.pages.dev
 - ミュート解除で音が出る。
 - 検索できる。
 - タグ絞り込みできる。
+- likes API の実環境疎通確認は `docs/likes_api_smoke_test.md` に従う。
 
 ## 使わない導線
 

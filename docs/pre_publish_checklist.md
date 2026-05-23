@@ -50,6 +50,13 @@ npm run build
 
 すべて成功すること。
 
+### likes API
+
+- production の D1 binding `DB` が設定済みである。
+- production の D1 に `schema.sql` が適用済みである。
+- `docs/likes_api_smoke_test.md` に従って実環境疎通確認を行う。
+- preview URL で likes を確認する場合は、本番 D1 ではなく preview 専用 D1 を使う。
+
 ## Cloudflare Pages 公開時の注意
 
 - Build command: `npm run build`
@@ -72,3 +79,4 @@ npm run build
 - Cloudflare Pages 上での SPA fallback。
 - モバイル実機での縦スワイプ。
 - Pages 公開後のキャッシュ挙動。
+- likes API の実環境疎通。
