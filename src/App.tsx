@@ -828,21 +828,38 @@ export default function App() {
     const deltaX = touchStartX.current - touchEndX;
     const deltaY = touchStartY.current - touchEndY;
     const threshold = 50;
+    const isSwipe = Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > threshold;
 
     if (isPlayerOpen) {
-      if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > threshold) {
+      if (isSwipe) {
         const now = Date.now();
         if (now - lastSwipeNavigationAt.current < SWIPE_NAVIGATION_COOLDOWN_MS) {
+          event.preventDefault();
+          event.stopPropagation();
           touchStartX.current = null;
           touchStartY.current = null;
           return;
         }
         lastSwipeNavigationAt.current = now;
         suppressNextPlayerClick.current = true;
+        event.preventDefault();
+        event.stopPropagation();
         if (deltaY > 0) {
           goToNext();
         } else {
           goToPrev();
+        }
+      } else if (isMobilePointer()) {
+        const target = event.target as HTMLElement;
+        const isInteractive = Boolean(
+          target.closest("button, a, input, textarea, select, label, [role='button']"),
+        );
+
+        if (!isInteractive) {
+          suppressNextPlayerClick.current = true;
+          event.preventDefault();
+          event.stopPropagation();
+          setShowControls((visible) => !visible);
         }
       }
     }
@@ -853,12 +870,13 @@ export default function App() {
 
   const handlePlayerClick = (event: MouseEvent<HTMLElement>) => {
     if (!isPlayerOpen) return;
-    if (!isMobilePointer()) return;
 
     if (suppressNextPlayerClick.current) {
       suppressNextPlayerClick.current = false;
       return;
     }
+
+    if (isMobilePointer()) return;
 
     const target = event.target as HTMLElement;
     const isInteractive = Boolean(
