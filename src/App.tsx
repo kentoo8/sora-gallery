@@ -26,6 +26,7 @@ type LoadState = "loading" | "ready" | "empty" | "error";
 
 const UNTAGGED_FILTER = "__untagged__";
 const cameoPattern = /@[A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)*/g;
+const SWIPE_NAVIGATION_COOLDOWN_MS = 500;
 
 class VideoDataError extends Error {
   constructor(
@@ -153,6 +154,24 @@ function pushGalleryUrl() {
 
 function isMobilePointer() {
   return window.matchMedia("(hover: none), (pointer: coarse)").matches;
+}
+
+async function requestVideoPlayback(
+  element: HTMLVideoElement,
+  { allowMutedFallback }: { allowMutedFallback: boolean },
+) {
+  try {
+    await element.play();
+    return "played";
+  } catch {
+    if (!allowMutedFallback) {
+      return "blocked";
+    }
+    element.muted = true;
+    element.defaultMuted = true;
+    await element.play().catch(() => {});
+    return "muted-fallback";
+  }
 }
 
 function Icon({
@@ -285,6 +304,9 @@ export default function App() {
   const [showControls, setShowControls] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [blockedPlaybackVideoId, setBlockedPlaybackVideoId] = useState<string | null>(
+    null,
+  );
   const [unavailableVideoIds, setUnavailableVideoIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -292,9 +314,10 @@ export default function App() {
   const [likedVideoIds, setLikedVideoIds] = useState<Set<string>>(() => new Set());
   const [isLikePending, setIsLikePending] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+  const activeVideoRef = useRef<HTMLVideoElement | null>(null);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+  const lastSwipeNavigationAt = useRef(0);
   const suppressNextPlayerClick = useRef(false);
   const currentVideoIdRef = useRef<string | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
@@ -475,6 +498,38 @@ export default function App() {
     [openGallery],
   );
 
+  const handlePlaybackRequestResult = useCallback(
+    (videoId: string, result: Awaited<ReturnType<typeof requestVideoPlayback>>) => {
+      if (currentVideoIdRef.current !== videoId) return;
+
+      if (result === "played") {
+        setBlockedPlaybackVideoId(null);
+        return;
+      }
+
+      if (result === "muted-fallback") {
+        setBlockedPlaybackVideoId(null);
+        setIsMuted(true);
+        return;
+      }
+
+      setBlockedPlaybackVideoId(videoId);
+    },
+    [],
+  );
+
+  const resumeBlockedPlayback = useCallback(() => {
+    const id = currentVideoIdRef.current;
+    const activeEl = activeVideoRef.current;
+    if (!id || !activeEl) return;
+
+    activeEl.muted = isMuted;
+    activeEl.defaultMuted = isMuted;
+    requestVideoPlayback(activeEl, { allowMutedFallback: isMuted }).then((result) =>
+      handlePlaybackRequestResult(id, result),
+    );
+  }, [handlePlaybackRequestResult, isMuted]);
+
   const jumpToPlayableIndex = useCallback(
     (index: number) => {
       if (playableVideos.length === 0) return;
@@ -505,15 +560,18 @@ export default function App() {
 
   const togglePlayback = useCallback(() => {
     const id = currentVideoIdRef.current;
-    const activeEl = id ? videoRefs.current[id] : null;
+    if (!id) return;
+    const activeEl = activeVideoRef.current;
     if (!activeEl) return;
 
     if (activeEl.paused) {
-      activeEl.play().catch(() => {});
+      requestVideoPlayback(activeEl, { allowMutedFallback: isMuted }).then((result) =>
+        handlePlaybackRequestResult(id, result),
+      );
     } else {
       activeEl.pause();
     }
-  }, []);
+  }, [handlePlaybackRequestResult, isMuted]);
 
   const randomVideo = useCallback(() => {
     if (playableVideos.length === 0) return;
@@ -726,26 +784,28 @@ export default function App() {
   ]);
 
   useEffect(() => {
-    const activeId = currentVideo?.id;
-    for (const [id, element] of Object.entries(videoRefs.current)) {
-      if (!element) continue;
-      if (id === activeId && isPlayerOpen) {
-        element.muted = isMuted;
-        element.play().catch(() => {});
-      } else {
-        element.pause();
-        element.muted = true;
-        element.currentTime = 0;
-      }
+    const element = activeVideoRef.current;
+    if (!element) return;
+
+    if (!currentVideo || !isPlayerOpen) {
+      element.pause();
+      return;
     }
-  }, [currentVideo?.id, isMuted, isPlayerOpen]);
+
+    element.muted = isMuted;
+    element.defaultMuted = isMuted;
+    element.setAttribute("webkit-playsinline", "true");
+    requestVideoPlayback(element, { allowMutedFallback: isMuted }).then((result) =>
+      handlePlaybackRequestResult(currentVideo.id, result),
+    );
+  }, [currentVideo, handlePlaybackRequestResult, isMuted, isPlayerOpen]);
 
   useEffect(() => {
     let animationFrameId = 0;
 
     const tick = () => {
       const activeId = currentVideoIdRef.current;
-      const activeEl = activeId ? videoRefs.current[activeId] : null;
+      const activeEl = activeId ? activeVideoRef.current : null;
       if (activeEl && progressRef.current && activeEl.duration) {
         progressRef.current.style.width = `${(activeEl.currentTime / activeEl.duration) * 100}%`;
       }
@@ -771,6 +831,13 @@ export default function App() {
 
     if (isPlayerOpen) {
       if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > threshold) {
+        const now = Date.now();
+        if (now - lastSwipeNavigationAt.current < SWIPE_NAVIGATION_COOLDOWN_MS) {
+          touchStartX.current = null;
+          touchStartY.current = null;
+          return;
+        }
+        lastSwipeNavigationAt.current = now;
         suppressNextPlayerClick.current = true;
         if (deltaY > 0) {
           goToNext();
@@ -807,17 +874,6 @@ export default function App() {
       setShowControls(false);
     }
   };
-
-  const renderVideos = useMemo(() => {
-    if (!currentVideo) return [];
-    const prev =
-      currentPlayableIndex > 0 ? playableVideos[currentPlayableIndex - 1] : null;
-    const next =
-      currentPlayableIndex !== -1 && currentPlayableIndex < playableVideos.length - 1
-        ? playableVideos[currentPlayableIndex + 1]
-        : null;
-    return [prev, currentVideo, next].filter(Boolean) as GalleryVideo[];
-  }, [currentPlayableIndex, currentVideo, playableVideos]);
 
   if (loadState === "loading") {
     return (
@@ -873,30 +929,47 @@ export default function App() {
         }`}
         aria-hidden={!isPlayerOpen}
       >
-        {renderVideos.map((video) => {
-          const isActive = video.id === currentVideo?.id;
-          return (
-            <div
-              key={video.id}
-              className={`absolute inset-0 bg-black transition-opacity duration-100 ${
-                isActive ? "z-10 opacity-100" : "z-0 opacity-0"
-              }`}
+        <div className="absolute inset-0 z-10 bg-black">
+          <video
+            ref={(element) => {
+              activeVideoRef.current = element;
+              if (element) {
+                element.muted = isMuted;
+                element.defaultMuted = isMuted;
+                element.setAttribute("webkit-playsinline", "true");
+              }
+            }}
+            src={currentVideo?.videoUrl}
+            onError={() => {
+              if (currentVideo) markVideoUnavailable(currentVideo.id);
+            }}
+            onLoadedMetadata={(event) => {
+              if (currentVideo && isPlayerOpen) {
+                requestVideoPlayback(event.currentTarget, {
+                  allowMutedFallback: isMuted,
+                }).then((result) => handlePlaybackRequestResult(currentVideo.id, result));
+              }
+            }}
+            className="h-full w-full object-contain"
+            autoPlay={isPlayerOpen}
+            loop
+            muted={isMuted}
+            playsInline
+            preload="auto"
+          />
+          {currentVideo && blockedPlaybackVideoId === currentVideo.id && (
+            <button
+              type="button"
+              onClick={resumeBlockedPlayback}
+              className="absolute left-1/2 top-1/2 z-20 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white shadow-2xl backdrop-blur-2xl transition hover:scale-105 hover:bg-black/75 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+              title="Play"
             >
-              <video
-                ref={(element) => {
-                  videoRefs.current[video.id] = element;
-                }}
-                src={video.videoUrl}
-                onError={() => markVideoUnavailable(video.id)}
-                className="h-full w-full object-contain"
-                loop
-                muted={!isActive || isMuted}
-                playsInline
-                preload="auto"
-              />
-            </div>
-          );
-        })}
+              <Icon className="ml-1 h-9 w-9">
+                <polygon points="8 5 19 12 8 19 8 5" />
+              </Icon>
+            </button>
+          )}
+        </div>
 
         <div
           className={`absolute left-5 top-8 z-30 flex flex-col items-center gap-4 transition-all duration-300 md:left-8 md:top-12 ${
