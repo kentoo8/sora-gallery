@@ -169,9 +169,10 @@ npm run export:gallery -- --config data/gallery-export-config.json --out ../sora
 段階:
 
 1. `sora-player` が公開対象を選別し、公開用 ID と object key を決める。
-2. 動画とサムネイルを R2 にアップロードする。
-3. R2 の公開 URL を使って `videos.json` を生成する。
-4. `sora-gallery` で `npm run validate:data` を実行する。
+2. `sora-player` が公開候補の未生成サムネイルを事前生成する。
+3. 動画とサムネイルを R2 にアップロードする。
+4. R2 の公開 URL を使って `videos.json` を生成する。
+5. `sora-gallery` で `npm run validate:data` を実行する。
 
 将来は `sora-player` 側 export script が R2 アップロードまで行ってもよい。
 

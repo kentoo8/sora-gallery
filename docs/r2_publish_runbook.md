@@ -105,42 +105,39 @@ thumbnails/{publicId}.webp
    }
    ```
 
-2. 一時出力で export 結果を確認する。
+2. `sora-player` で動画 manifest を更新し、サムネイル生成込みで同期計画を作る。
 
    ```bash
-   cd /Users/kentaokazaki/src/sora-player
-   npm run export:gallery -- \
+   cd ../sora-player
+   npm run generate:manifest
+   npm run plan:gallery-sync -- \
      --config data/gallery-export-config.json \
-     --out /private/tmp/sora-gallery-export/videos.json \
-     --manifest /private/tmp/sora-gallery-export/manifest.json
+     --previous ../sora-gallery/public/videos.json \
+     --out /private/tmp/sora-gallery-sync \
+     --fix-thumbnails
    ```
 
-3. `sora-gallery` の validator で確認する。
+   `--fix-thumbnails` は公開候補の未生成サムネイルを `sora-player` 側で生成してから同期計画を続行する。`sora-gallery` 側ではサムネイル生成をしない。
+
+3. `sora-gallery` の validator で次回反映予定の JSON を確認する。
 
    ```bash
-   cd /Users/kentaokazaki/src/sora-gallery
-   node scripts/validate-videos.mjs /private/tmp/sora-gallery-export/videos.json
+   cd ../sora-gallery
+   node scripts/validate-videos.mjs /private/tmp/sora-gallery-sync/videos.json
    ```
 
-4. `sora-player` でアップロード用ディレクトリを生成する。
-
-   ```bash
-   cd /Users/kentaokazaki/src/sora-player
-   npm run prepare:gallery-upload -- \
-     --config data/gallery-export-config.json \
-     --out /private/tmp/sora-gallery-upload-prod
-   ```
-
-   `--out` には空のディレクトリを指定する。既存ファイルがある場合は、古い upload 対象の混入を避けるため prepare コマンドがエラーにする。
-
-5. manifest の object key に従って、動画とサムネイルを R2 にアップロードする。
+4. 同期計画に従って、新規動画とサムネイルを R2 にアップロードする。
 
    初期のアップロード手段は `rclone` とする。`wrangler r2 object put` は単発確認には使えるが、動画 100 本規模の bulk upload には使わない。
 
    ```bash
-   rclone copy /private/tmp/sora-gallery-upload-prod/videos r2:sora-gallery-media/videos
-   rclone copy /private/tmp/sora-gallery-upload-prod/thumbnails r2:sora-gallery-media/thumbnails
+   rclone copy /private/tmp/sora-gallery-sync/videos r2:sora-gallery-media/videos
+   rclone copy /private/tmp/sora-gallery-sync/thumbnails r2:sora-gallery-media/thumbnails
    ```
+
+5. 同期計画に削除対象がある場合は、`delete-manifest.json` を確認して R2 から削除する。
+
+   削除は公開 ID ベースの `videos/...` と `thumbnails/...` だけであることを確認してから実行する。
 
 6. 代表 URL をブラウザまたは `curl` で確認する。
 
@@ -149,19 +146,17 @@ thumbnails/{publicId}.webp
    curl -I https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/{publicId}.webp
    ```
 
-7. 本番の `public/videos.json` を生成する。
+7. 生成済みの `videos.json` を `sora-gallery/public/videos.json` に反映する。
 
    ```bash
-   cd /Users/kentaokazaki/src/sora-player
-   npm run export:gallery -- \
-     --config data/gallery-export-config.json \
-     --out ../sora-gallery/public/videos.json
+   cp /private/tmp/sora-gallery-sync/videos.json public/videos.json
    ```
+
+   `public/videos.json` は `sora-player` が生成した完成済み公開データを受け取る。`sora-gallery` 側ではローカルファイルシステム参照、サムネイル生成、管理用データ生成をしない。
 
 8. `sora-gallery` で検証する。
 
    ```bash
-   cd /Users/kentaokazaki/src/sora-gallery
    npm run validate:data
    npm run validate:remote
    npm run build
@@ -172,11 +167,13 @@ thumbnails/{publicId}.webp
 ## 更新公開の流れ
 
 1. `sora-player` で公開対象タグ、`meta:no-public`、タグ単位の除外設定を更新する。
-2. 同じ manifest を使って export する。
-3. 新規または変更された object key のファイルを R2 にアップロードする。
-4. 今回の `public/videos.json` から外れた動画の R2 object を削除する。
-5. `sora-gallery` で `npm run validate:data`、`npm run validate:remote`、`npm run build` を実行する。
-6. `public/videos.json` をコミットする。
+2. `sora-player` で `npm run generate:manifest` を実行する。
+3. `plan:gallery-sync --fix-thumbnails` で同期計画を作る。
+4. `/private/tmp/sora-gallery-sync/videos` と `/private/tmp/sora-gallery-sync/thumbnails` を R2 にアップロードする。
+5. `delete-manifest.json` に削除対象がある場合は、R2 から動画本体とサムネイルを削除する。
+6. `/private/tmp/sora-gallery-sync/videos.json` を `public/videos.json` に反映する。
+7. `sora-gallery` で `npm run validate:data`、`npm run validate:remote`、`npm run build` を実行する。
+8. `public/videos.json` をコミットする。
 
 既存動画の公開 ID は manifest で維持する。manifest を消すと個別 URL と将来の likes キーが変わるため、公開後は消さない。
 
