@@ -649,7 +649,31 @@ export default function App() {
 
       const isLiked = likedVideoIds.has(videoId);
       const action = isLiked ? "unlike" : "like";
+      const previousCount = likesMap[videoId] || 0;
+      const optimisticCount =
+        action === "like" ? previousCount + 1 : Math.max(0, previousCount - 1);
+      const nextLikedVideoIds = new Set(likedVideoIds);
+      if (action === "like") {
+        nextLikedVideoIds.add(videoId);
+      } else {
+        nextLikedVideoIds.delete(videoId);
+      }
+
       setIsLikePending(true);
+      setLikesMap((prev) => ({
+        ...prev,
+        [videoId]: optimisticCount,
+      }));
+      setLikedVideoIds(nextLikedVideoIds);
+      try {
+        localStorage.setItem(
+          "sora_liked_videos",
+          JSON.stringify(Array.from(nextLikedVideoIds)),
+        );
+      } catch (e) {
+        console.error("LocalStorage保存エラー:", e);
+      }
+
       try {
         const response = await fetch("/api/likes", {
           method: "POST",
@@ -671,29 +695,36 @@ export default function App() {
             ...prev,
             [videoId]: data.new_count,
           }));
-
-          setLikedVideoIds((prev) => {
-            const next = new Set(prev);
-            if (action === "like") {
-              next.add(videoId);
-            } else {
-              next.delete(videoId);
-            }
-            try {
-              localStorage.setItem("sora_liked_videos", JSON.stringify(Array.from(next)));
-            } catch (e) {
-              console.error("LocalStorage保存エラー:", e);
-            }
-            return next;
-          });
         }
       } catch (err: any) {
+        setLikesMap((prev) => ({
+          ...prev,
+          [videoId]: previousCount,
+        }));
+        setLikedVideoIds(likedVideoIds);
+        try {
+          localStorage.setItem(
+            "sora_liked_videos",
+            JSON.stringify(Array.from(likedVideoIds)),
+          );
+        } catch (e) {
+          console.error("LocalStorage保存エラー:", e);
+        }
         console.error("いいね送信エラー:", err.message);
       } finally {
         setIsLikePending(false);
       }
     },
-    [likedVideoIds, isLikePending]
+    [likedVideoIds, isLikePending, likesMap],
+  );
+
+  const handleMobileLikeTouchEnd = useCallback(
+    (event: TouchEvent<HTMLButtonElement>, videoId: string) => {
+      event.preventDefault();
+      stopMobileControlTouch(event);
+      void handleLikeVideo(videoId);
+    },
+    [handleLikeVideo, stopMobileControlTouch],
   );
 
   const renderPromptText = useCallback(
@@ -1289,7 +1320,7 @@ export default function App() {
               type="button"
               onClick={() => handleLikeVideo(currentVideo.id)}
               onTouchStart={stopMobileControlTouch}
-              onTouchEnd={stopMobileControlTouch}
+              onTouchEnd={(event) => handleMobileLikeTouchEnd(event, currentVideo.id)}
               disabled={isLikePending}
               className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
                 likedVideoIds.has(currentVideo.id) ? "text-pink-400" : ""
