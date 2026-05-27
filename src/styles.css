@@ -36,15 +36,23 @@ input {
 }
 
 .player-viewport {
+  --mobile-prompt-panel-height: 44dvh;
+  --mobile-prompt-top-padding: 9rem;
   height: 100vh;
   height: 100dvh;
 }
 
 .player-prompt-panel {
+  min-height: var(--mobile-prompt-panel-height);
   padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 768px) {
+  .player-viewport {
+    --mobile-prompt-panel-height: 0px;
+    --mobile-prompt-top-padding: 0px;
+  }
+
   .player-prompt-panel {
     padding-bottom: 1.5rem;
   }

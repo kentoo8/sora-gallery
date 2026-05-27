@@ -1230,32 +1230,125 @@ export default function App() {
 
         {currentVideo && (
           <div
-            className={`player-prompt-panel pointer-events-none absolute bottom-0 left-0 right-0 z-20 min-h-[44vh] bg-gradient-to-t from-black/90 via-black/45 to-transparent px-6 pl-16 pt-24 transition-all duration-300 md:min-h-0 md:p-10 ${
+            className={`player-prompt-panel pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/90 via-black/45 to-transparent px-6 pl-16 pt-36 transition-all duration-300 md:min-h-0 md:p-10 ${
               showControls ? "opacity-100" : "opacity-0"
             }`}
           >
+            <div
+              className={`absolute left-3 top-36 z-30 flex flex-col items-center gap-2 transition-all duration-300 md:hidden ${
+                showControls ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={openGallery}
+                onTouchStart={stopMobileControlTouch}
+                onTouchEnd={stopMobileControlTouch}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+                title="ギャラリー一覧に戻る"
+              >
+                <SoraMascotIcon className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLikeVideo(currentVideo.id)}
+                onTouchStart={stopMobileControlTouch}
+                onTouchEnd={(event) => handleMobileLikeTouchEnd(event, currentVideo.id)}
+                disabled={isLikePending}
+                className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
+                  likedVideoIds.has(currentVideo.id) ? "text-pink-400" : ""
+                }`}
+                title={likedVideoIds.has(currentVideo.id) ? "いいねを取り消す" : "いいね！"}
+              >
+                <Icon
+                  className={`h-[18px] w-[18px] transition-transform ${
+                    likedVideoIds.has(currentVideo.id)
+                      ? "scale-110 fill-pink-500 stroke-pink-500"
+                      : ""
+                  }`}
+                >
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                </Icon>
+                {(likesMap[currentVideo.id] || 0) > 0 && (
+                  <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-black/70 px-1 text-center font-mono text-[10px] leading-4 text-white/80">
+                    {likesMap[currentVideo.id]}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMuted((muted) => !muted)}
+                onTouchStart={stopMobileControlTouch}
+                onTouchEnd={stopMobileControlTouch}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+                title={isMuted ? "Unmute" : "Mute"}
+                aria-pressed={!isMuted}
+              >
+                {isMuted ? (
+                  <Icon className="h-[18px] w-[18px]">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <line x1="23" y1="9" x2="17" y2="15" />
+                    <line x1="17" y1="9" x2="23" y2="15" />
+                  </Icon>
+                ) : (
+                  <Icon className="h-[18px] w-[18px]">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+                    <path d="M19 5a9 9 0 0 1 0 14" />
+                  </Icon>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleCopyPrompt}
+                onTouchStart={stopMobileControlTouch}
+                onTouchEnd={handleMobileCopyTouchEnd}
+                disabled={!hasCurrentPrompt}
+                className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-xl backdrop-blur-xl transition focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
+                  hasCurrentPrompt
+                    ? "border-white/10 bg-black/30 text-white/70 hover:bg-black/45 hover:text-white"
+                    : "cursor-not-allowed border-white/5 bg-black/20 text-white/25"
+                }`}
+                title={
+                  hasCurrentPrompt
+                    ? isCopied
+                      ? "コピーしました"
+                      : "プロンプトをコピー"
+                    : "コピーできるプロンプトがありません"
+                }
+              >
+                {isCopied ? (
+                  <Icon className="h-[18px] w-[18px] text-emerald-300">
+                    <polyline points="20 6 9 17 4 12" />
+                  </Icon>
+                ) : (
+                  <Icon className="h-[18px] w-[18px]">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </Icon>
+                )}
+              </button>
+            </div>
             <div className="max-w-2xl">
               {currentVideo.description && (
-                <p className="mb-3 text-sm leading-6 text-white/70">
+                <p className="mb-3 hidden text-sm leading-6 text-white/70 md:block">
                   {currentVideo.description}
                 </p>
               )}
-              {currentVideo.tags.length > 0 && (
-                <div className="mb-3 flex flex-wrap gap-1.5">
-                  {currentVideo.tags.map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => openTagGallery(tag)}
-                      className={`rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/75 backdrop-blur-md transition-colors hover:border-blue-300/50 hover:bg-blue-500/25 hover:text-blue-100 focus:outline-none focus-visible:border-blue-200 ${
-                        showControls ? "pointer-events-auto" : "pointer-events-none"
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <div className="mb-3 flex h-9 flex-wrap items-start gap-1.5 overflow-hidden md:h-auto md:overflow-visible">
+                {currentVideo.tags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => openTagGallery(tag)}
+                    className={`rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/75 backdrop-blur-md transition-colors hover:border-blue-300/50 hover:bg-blue-500/25 hover:text-blue-100 focus:outline-none focus-visible:border-blue-200 ${
+                      showControls ? "pointer-events-auto" : "pointer-events-none"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
               <div className="group/prompt relative mb-2 flex items-start gap-2.5 text-base font-light leading-relaxed text-white drop-shadow-2xl">
                 <div
                   data-prompt-scroll
@@ -1328,104 +1421,6 @@ export default function App() {
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {currentVideo && (
-          <div
-            className={`absolute bottom-28 left-3 z-30 flex flex-col items-center gap-2 transition-all duration-300 md:hidden ${
-              showControls ? "opacity-100" : "pointer-events-none opacity-0"
-            }`}
-          >
-            <button
-              type="button"
-              onClick={openGallery}
-              onTouchStart={stopMobileControlTouch}
-              onTouchEnd={stopMobileControlTouch}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
-              title="ギャラリー一覧に戻る"
-            >
-              <SoraMascotIcon className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleLikeVideo(currentVideo.id)}
-              onTouchStart={stopMobileControlTouch}
-              onTouchEnd={(event) => handleMobileLikeTouchEnd(event, currentVideo.id)}
-              disabled={isLikePending}
-              className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
-                likedVideoIds.has(currentVideo.id) ? "text-pink-400" : ""
-              }`}
-              title={likedVideoIds.has(currentVideo.id) ? "いいねを取り消す" : "いいね！"}
-            >
-              <Icon
-                className={`h-[18px] w-[18px] transition-transform ${
-                  likedVideoIds.has(currentVideo.id)
-                    ? "scale-110 fill-pink-500 stroke-pink-500"
-                    : ""
-                }`}
-              >
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-              </Icon>
-              {(likesMap[currentVideo.id] || 0) > 0 && (
-                <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-black/70 px-1 text-center font-mono text-[10px] leading-4 text-white/80">
-                  {likesMap[currentVideo.id]}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsMuted((muted) => !muted)}
-              onTouchStart={stopMobileControlTouch}
-              onTouchEnd={stopMobileControlTouch}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
-              title={isMuted ? "Unmute" : "Mute"}
-              aria-pressed={!isMuted}
-            >
-              {isMuted ? (
-                <Icon className="h-[18px] w-[18px]">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <line x1="23" y1="9" x2="17" y2="15" />
-                  <line x1="17" y1="9" x2="23" y2="15" />
-                </Icon>
-              ) : (
-                <Icon className="h-[18px] w-[18px]">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <path d="M15.5 8.5a5 5 0 0 1 0 7" />
-                  <path d="M19 5a9 9 0 0 1 0 14" />
-                </Icon>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={handleCopyPrompt}
-              onTouchStart={stopMobileControlTouch}
-              onTouchEnd={handleMobileCopyTouchEnd}
-              disabled={!hasCurrentPrompt}
-              className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-xl backdrop-blur-xl transition focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
-                hasCurrentPrompt
-                  ? "border-white/10 bg-black/30 text-white/70 hover:bg-black/45 hover:text-white"
-                  : "cursor-not-allowed border-white/5 bg-black/20 text-white/25"
-              }`}
-              title={
-                hasCurrentPrompt
-                  ? isCopied
-                    ? "コピーしました"
-                    : "プロンプトをコピー"
-                  : "コピーできるプロンプトがありません"
-              }
-            >
-              {isCopied ? (
-                <Icon className="h-[18px] w-[18px] text-emerald-300">
-                  <polyline points="20 6 9 17 4 12" />
-                </Icon>
-              ) : (
-                <Icon className="h-[18px] w-[18px]">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </Icon>
-              )}
-            </button>
           </div>
         )}
 
