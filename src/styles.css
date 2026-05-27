@@ -30,6 +30,26 @@ input {
   font: inherit;
 }
 
+.app-viewport {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.player-viewport {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.player-prompt-panel {
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .player-prompt-panel {
+    padding-bottom: 1.5rem;
+  }
+}
+
 @layer components {
   .toolbar-button {
     display: flex;

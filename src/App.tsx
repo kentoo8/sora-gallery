@@ -1008,7 +1008,7 @@ export default function App() {
 
   if (loadState === "loading") {
     return (
-      <main className="flex h-screen items-center justify-center bg-black text-white">
+      <main className="app-viewport flex items-center justify-center bg-black text-white">
         <div className="text-2xl font-light uppercase tracking-widest text-white/70">
           Loading
         </div>
@@ -1018,7 +1018,7 @@ export default function App() {
 
   if (loadState === "error") {
     return (
-      <main className="flex h-screen items-center justify-center bg-black p-8 text-white">
+      <main className="app-viewport flex items-center justify-center bg-black p-8 text-white">
         <section className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-2xl">
           <h1 className="text-xl font-semibold">Gallery data error</h1>
           <p className="mt-4 text-sm leading-6 text-white/65">{loadError}</p>
@@ -1029,7 +1029,7 @@ export default function App() {
 
   if (loadState === "empty") {
     return (
-      <main className="flex h-screen items-center justify-center bg-black p-8 text-white">
+      <main className="app-viewport flex items-center justify-center bg-black p-8 text-white">
         <section className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-2xl">
           <h1 className="text-xl font-semibold">Sora Gallery</h1>
           <p className="mt-4 text-sm leading-6 text-white/60">
@@ -1042,7 +1042,7 @@ export default function App() {
 
   return (
     <main
-      className="relative h-screen w-full overflow-hidden bg-black text-white"
+      className="player-viewport relative w-full overflow-hidden bg-black text-white"
       onMouseMove={(event) => {
         const isNearBottom = event.clientY > window.innerHeight * 0.58;
         const isNearLeft = event.clientX < window.innerWidth * 0.28;
@@ -1200,7 +1200,7 @@ export default function App() {
 
         {currentVideo && (
           <div
-            className={`pointer-events-none absolute bottom-0 left-0 right-0 z-20 min-h-[44vh] bg-gradient-to-t from-black/90 via-black/45 to-transparent px-6 pb-6 pl-16 pt-24 transition-all duration-300 md:min-h-0 md:p-10 md:pb-6 ${
+            className={`player-prompt-panel pointer-events-none absolute bottom-0 left-0 right-0 z-20 min-h-[44vh] bg-gradient-to-t from-black/90 via-black/45 to-transparent px-6 pl-16 pt-24 transition-all duration-300 md:min-h-0 md:p-10 ${
               showControls ? "opacity-100" : "opacity-0"
             }`}
           >
