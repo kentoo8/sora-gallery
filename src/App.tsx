@@ -294,7 +294,7 @@ export default function App() {
   const [videos, setVideos] = useState<GalleryVideo[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState("");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("oldest");
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
