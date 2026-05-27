@@ -989,6 +989,17 @@ export default function App() {
           )}
         </div>
 
+        {currentVideo && (
+          <div
+            className={`absolute left-4 top-5 z-30 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 font-mono text-[11px] leading-none text-white/55 shadow-xl backdrop-blur-xl transition-all duration-300 md:hidden ${
+              showControls ? "opacity-100" : "pointer-events-none opacity-0"
+            }`}
+          >
+            {currentPlayableIndex === -1 ? 1 : currentPlayableIndex + 1} /{" "}
+            {playableVideos.length}
+          </div>
+        )}
+
         <div
           className={`absolute left-5 top-8 z-30 hidden flex-col items-center gap-4 transition-all duration-300 md:left-8 md:top-12 md:flex ${
             showControls ? "opacity-100" : "pointer-events-none opacity-0"
@@ -1076,7 +1087,7 @@ export default function App() {
 
         {currentVideo && (
           <div
-            className={`pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-6 pt-32 transition-all duration-300 md:p-10 md:pb-6 ${
+            className={`pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/90 via-black/45 to-transparent px-6 pb-6 pl-16 pt-32 transition-all duration-300 md:p-10 md:pb-6 ${
               showControls ? "opacity-100" : "opacity-0"
             }`}
           >
@@ -1160,25 +1171,33 @@ export default function App() {
 
         {currentVideo && (
           <div
-            className={`absolute bottom-7 right-4 z-30 flex flex-col items-center gap-2 rounded-full border border-white/10 bg-black/45 px-2 py-3 shadow-2xl backdrop-blur-3xl transition-all duration-300 md:hidden ${
+            className={`absolute bottom-28 left-3 z-30 flex flex-col items-center gap-2 transition-all duration-300 md:hidden ${
               showControls ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
           >
             <button
               type="button"
+              onClick={openGallery}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+              title="ギャラリー一覧に戻る"
+            >
+              <SoraMascotIcon className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
               onClick={() => setIsMuted((muted) => !muted)}
-              className="toolbar-button"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
               title={isMuted ? "Unmute" : "Mute"}
               aria-pressed={!isMuted}
             >
               {isMuted ? (
-                <Icon>
+                <Icon className="h-[18px] w-[18px]">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
                   <line x1="23" y1="9" x2="17" y2="15" />
                   <line x1="17" y1="9" x2="23" y2="15" />
                 </Icon>
               ) : (
-                <Icon>
+                <Icon className="h-[18px] w-[18px]">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
                   <path d="M15.5 8.5a5 5 0 0 1 0 7" />
                   <path d="M19 5a9 9 0 0 1 0 14" />
@@ -1187,32 +1206,15 @@ export default function App() {
             </button>
             <button
               type="button"
-              onClick={handleCopyPrompt}
-              className="toolbar-button"
-              title={isCopied ? "コピーしました" : "プロンプトをコピー"}
-            >
-              {isCopied ? (
-                <Icon className="h-5 w-5 text-emerald-300">
-                  <polyline points="20 6 9 17 4 12" />
-                </Icon>
-              ) : (
-                <Icon>
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </Icon>
-              )}
-            </button>
-            <button
-              type="button"
               onClick={() => handleLikeVideo(currentVideo.id)}
               disabled={isLikePending}
-              className={`toolbar-button relative ${
+              className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
                 likedVideoIds.has(currentVideo.id) ? "text-pink-400" : ""
               }`}
               title={likedVideoIds.has(currentVideo.id) ? "いいねを取り消す" : "いいね！"}
             >
               <Icon
-                className={`h-5 w-5 transition-transform ${
+                className={`h-[18px] w-[18px] transition-transform ${
                   likedVideoIds.has(currentVideo.id)
                     ? "scale-110 fill-pink-500 stroke-pink-500"
                     : ""
