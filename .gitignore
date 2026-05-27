@@ -2,4 +2,4 @@
 dist/
 node_modules/
 .wrangler/
-
+public/videos.json
