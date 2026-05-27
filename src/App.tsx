@@ -990,7 +990,7 @@ export default function App() {
         </div>
 
         <div
-          className={`absolute left-5 top-8 z-30 flex flex-col items-center gap-4 transition-all duration-300 md:left-8 md:top-12 ${
+          className={`absolute left-5 top-8 z-30 hidden flex-col items-center gap-4 transition-all duration-300 md:left-8 md:top-12 md:flex ${
             showControls ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
@@ -1098,7 +1098,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleCopyPrompt}
-                    className="flex shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 p-1.5 text-white/45 transition-all hover:scale-105 hover:bg-white/10 hover:text-white focus:outline-none focus-visible:border-white/40"
+                    className="hidden shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 p-1.5 text-white/45 transition-all hover:scale-105 hover:bg-white/10 hover:text-white focus:outline-none focus-visible:border-white/40 md:flex"
                     title={isCopied ? "コピーしました" : "プロンプトをコピー"}
                   >
                     {isCopied ? (
@@ -1116,7 +1116,7 @@ export default function App() {
                     type="button"
                     onClick={() => handleLikeVideo(currentVideo.id)}
                     disabled={isLikePending}
-                    className={`flex shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 transition-all focus:outline-none focus-visible:border-white/40 ${
+                    className={`hidden shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 transition-all focus:outline-none focus-visible:border-white/40 md:flex ${
                       likedVideoIds.has(currentVideo.id)
                         ? "border-pink-500/30 bg-pink-500/10 text-pink-400 hover:scale-105 hover:bg-pink-500/15"
                         : "border-white/10 bg-white/5 text-white/45 hover:scale-105 hover:bg-white/10 hover:text-white"
@@ -1155,6 +1155,77 @@ export default function App() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {currentVideo && (
+          <div
+            className={`absolute bottom-7 right-4 z-30 flex flex-col items-center gap-2 rounded-full border border-white/10 bg-black/45 px-2 py-3 shadow-2xl backdrop-blur-3xl transition-all duration-300 md:hidden ${
+              showControls ? "opacity-100" : "pointer-events-none opacity-0"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setIsMuted((muted) => !muted)}
+              className="toolbar-button"
+              title={isMuted ? "Unmute" : "Mute"}
+              aria-pressed={!isMuted}
+            >
+              {isMuted ? (
+                <Icon>
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <line x1="23" y1="9" x2="17" y2="15" />
+                  <line x1="17" y1="9" x2="23" y2="15" />
+                </Icon>
+              ) : (
+                <Icon>
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+                  <path d="M19 5a9 9 0 0 1 0 14" />
+                </Icon>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyPrompt}
+              className="toolbar-button"
+              title={isCopied ? "コピーしました" : "プロンプトをコピー"}
+            >
+              {isCopied ? (
+                <Icon className="h-5 w-5 text-emerald-300">
+                  <polyline points="20 6 9 17 4 12" />
+                </Icon>
+              ) : (
+                <Icon>
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </Icon>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleLikeVideo(currentVideo.id)}
+              disabled={isLikePending}
+              className={`toolbar-button relative ${
+                likedVideoIds.has(currentVideo.id) ? "text-pink-400" : ""
+              }`}
+              title={likedVideoIds.has(currentVideo.id) ? "いいねを取り消す" : "いいね！"}
+            >
+              <Icon
+                className={`h-5 w-5 transition-transform ${
+                  likedVideoIds.has(currentVideo.id)
+                    ? "scale-110 fill-pink-500 stroke-pink-500"
+                    : ""
+                }`}
+              >
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </Icon>
+              {(likesMap[currentVideo.id] || 0) > 0 && (
+                <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-black/70 px-1 text-center font-mono text-[10px] leading-4 text-white/80">
+                  {likesMap[currentVideo.id]}
+                </span>
+              )}
+            </button>
           </div>
         )}
 
