@@ -270,22 +270,29 @@ function TagButton({
   active,
   children,
   onClick,
+  showPlayHint = false,
 }: {
   active: boolean;
   children: ReactNode;
   onClick: () => void;
+  showPlayHint?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-3 py-1.5 text-xs transition-colors focus:outline-none focus-visible:border-blue-200 ${
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors focus:outline-none focus-visible:border-blue-200 ${
         active
           ? "border-blue-300/60 bg-blue-500/20 text-blue-100"
           : "border-white/10 bg-white/5 text-white/60 hover:text-white"
       }`}
     >
-      {children}
+      <span>{children}</span>
+      {showPlayHint && (
+        <Icon className="h-3 w-3 fill-current text-blue-100/75">
+          <polygon points="8 5 19 12 8 19 8 5" />
+        </Icon>
+      )}
     </button>
   );
 }
@@ -502,6 +509,21 @@ export default function App() {
       openGallery();
     },
     [openGallery],
+  );
+
+  const handleTagFilterClick = useCallback(
+    (tag: string) => {
+      if (activeTag === tag) {
+        const firstVisibleVideo = filteredVideos[0];
+        if (firstVisibleVideo) {
+          openVideo(firstVisibleVideo.id);
+        }
+        return;
+      }
+
+      setActiveTag(tag);
+    },
+    [activeTag, filteredVideos, openVideo],
   );
 
   const handlePlaybackRequestResult = useCallback(
@@ -1525,14 +1547,18 @@ export default function App() {
               <div className="mb-8 flex flex-wrap gap-2">
                 <TagButton
                   active={activeTag === ""}
-                  onClick={() => setActiveTag("")}
+                  onClick={() => handleTagFilterClick("")}
+                  showPlayHint={activeTag === "" && filteredVideos.length > 0}
                 >
                   All <span className="ml-1 opacity-60">{sortedVideos.length}</span>
                 </TagButton>
                 {untaggedCount > 0 && (
                   <TagButton
                     active={activeTag === UNTAGGED_FILTER}
-                    onClick={() => setActiveTag(UNTAGGED_FILTER)}
+                    onClick={() => handleTagFilterClick(UNTAGGED_FILTER)}
+                    showPlayHint={
+                      activeTag === UNTAGGED_FILTER && filteredVideos.length > 0
+                    }
                   >
                     未分類 <span className="ml-1 opacity-60">{untaggedCount}</span>
                   </TagButton>
@@ -1541,7 +1567,8 @@ export default function App() {
                   <TagButton
                     key={tag}
                     active={activeTag === tag}
-                    onClick={() => setActiveTag(tag)}
+                    onClick={() => handleTagFilterClick(tag)}
+                    showPlayHint={activeTag === tag && filteredVideos.length > 0}
                   >
                     {tag} <span className="ml-1 opacity-60">{count}</span>
                   </TagButton>
