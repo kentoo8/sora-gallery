@@ -20,7 +20,7 @@ let allowedVideoIdsCache:
 
 // サーバーレスインスタンス内の簡易IPキャッシュ
 const ipCache = new Map<string, number>();
-const RATE_LIMIT_WINDOW_MS = 2000; // 2秒
+const RATE_LIMIT_WINDOW_MS = 1000; // 1秒
 
 function jsonResponse(body: unknown, init?: ResponseInit): Response {
   const headers = new Headers(init?.headers);
