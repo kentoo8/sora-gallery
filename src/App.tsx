@@ -317,6 +317,11 @@ export default function App() {
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
+  const touchStartPromptScroll = useRef<{
+    clientHeight: number;
+    scrollHeight: number;
+    scrollTop: number;
+  } | null>(null);
   const lastSwipeNavigationAt = useRef(0);
   const suppressNextPlayerClick = useRef(false);
   const currentVideoIdRef = useRef<string | null>(null);
@@ -458,6 +463,7 @@ export default function App() {
     ? playableVideos.findIndex((video) => video.id === currentVideo.id)
     : -1;
   const isPlayerOpen = currentVideo !== null;
+  const hasCurrentPrompt = Boolean(currentVideo?.prompt.trim());
   const isSearchActive = activeSearchQuery.trim().length > 0 || activeTag.length > 0;
   const activeTagLabel = activeTag === UNTAGGED_FILTER ? "未分類" : activeTag;
 
@@ -579,16 +585,63 @@ export default function App() {
     jumpToPlayableIndex(randomIndex);
   }, [jumpToPlayableIndex, playableVideos.length]);
 
+  const copyTextToClipboard = useCallback(async (text: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      // Fall back for iOS/local HTTP where the Clipboard API may reject.
+    }
+
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.readOnly = true;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    textArea.setSelectionRange(0, text.length);
+
+    try {
+      return document.execCommand("copy");
+    } catch {
+      return false;
+    } finally {
+      document.body.removeChild(textArea);
+    }
+  }, []);
+
   const handleCopyPrompt = useCallback(async () => {
     if (!currentVideo?.prompt) return;
-    try {
-      await navigator.clipboard.writeText(currentVideo.prompt);
+    const copied = await copyTextToClipboard(currentVideo.prompt);
+    if (copied) {
       setIsCopied(true);
       window.setTimeout(() => setIsCopied(false), 1600);
-    } catch {
+    } else {
       setIsCopied(false);
     }
-  }, [currentVideo?.prompt]);
+  }, [copyTextToClipboard, currentVideo?.prompt]);
+
+  const stopMobileControlTouch = useCallback((event: TouchEvent<HTMLElement>) => {
+    event.stopPropagation();
+    touchStartX.current = null;
+    touchStartY.current = null;
+    touchStartPromptScroll.current = null;
+  }, []);
+
+  const handleMobileCopyTouchEnd = useCallback(
+    (event: TouchEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      stopMobileControlTouch(event);
+      void handleCopyPrompt();
+    },
+    [handleCopyPrompt, stopMobileControlTouch],
+  );
 
   const handleLikeVideo = useCallback(
     async (videoId: string) => {
@@ -819,6 +872,16 @@ export default function App() {
   const handleTouchStart = (event: TouchEvent) => {
     touchStartX.current = event.touches[0].clientX;
     touchStartY.current = event.touches[0].clientY;
+    const promptScrollEl = (event.target as HTMLElement).closest<HTMLElement>(
+      "[data-prompt-scroll]",
+    );
+    touchStartPromptScroll.current = promptScrollEl
+      ? {
+          clientHeight: promptScrollEl.clientHeight,
+          scrollHeight: promptScrollEl.scrollHeight,
+          scrollTop: promptScrollEl.scrollTop,
+        }
+      : null;
   };
 
   const handleTouchEnd = (event: TouchEvent) => {
@@ -832,12 +895,30 @@ export default function App() {
 
     if (isPlayerOpen) {
       if (isSwipe) {
+        const promptScroll = touchStartPromptScroll.current;
+        if (promptScroll && promptScroll.scrollHeight > promptScroll.clientHeight + 1) {
+          const atTop = promptScroll.scrollTop <= 0;
+          const atBottom =
+            promptScroll.scrollTop + promptScroll.clientHeight >=
+            promptScroll.scrollHeight - 1;
+          const canScrollPrompt =
+            (deltaY > 0 && !atBottom) || (deltaY < 0 && !atTop);
+
+          if (canScrollPrompt) {
+            touchStartX.current = null;
+            touchStartY.current = null;
+            touchStartPromptScroll.current = null;
+            return;
+          }
+        }
+
         const now = Date.now();
         if (now - lastSwipeNavigationAt.current < SWIPE_NAVIGATION_COOLDOWN_MS) {
           event.preventDefault();
           event.stopPropagation();
           touchStartX.current = null;
           touchStartY.current = null;
+          touchStartPromptScroll.current = null;
           return;
         }
         lastSwipeNavigationAt.current = now;
@@ -866,6 +947,7 @@ export default function App() {
 
     touchStartX.current = null;
     touchStartY.current = null;
+    touchStartPromptScroll.current = null;
   };
 
   const handlePlayerClick = (event: MouseEvent<HTMLElement>) => {
@@ -1087,7 +1169,7 @@ export default function App() {
 
         {currentVideo && (
           <div
-            className={`pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/90 via-black/45 to-transparent px-6 pb-6 pl-16 pt-32 transition-all duration-300 md:p-10 md:pb-6 ${
+            className={`pointer-events-none absolute bottom-0 left-0 right-0 z-20 min-h-[44vh] bg-gradient-to-t from-black/90 via-black/45 to-transparent px-6 pb-6 pl-16 pt-24 transition-all duration-300 md:min-h-0 md:p-10 md:pb-6 ${
               showControls ? "opacity-100" : "opacity-0"
             }`}
           >
@@ -1097,10 +1179,33 @@ export default function App() {
                   {currentVideo.description}
                 </p>
               )}
+              {currentVideo.tags.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {currentVideo.tags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => openTagGallery(tag)}
+                      className={`rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/75 backdrop-blur-md transition-colors hover:border-blue-300/50 hover:bg-blue-500/25 hover:text-blue-100 focus:outline-none focus-visible:border-blue-200 ${
+                        showControls ? "pointer-events-auto" : "pointer-events-none"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="group/prompt relative mb-2 flex items-start gap-2.5 text-base font-light leading-relaxed text-white drop-shadow-2xl">
-                <div className={`max-h-40 flex-1 overflow-y-auto pr-1 text-sm leading-6 md:text-base ${
+                <div
+                  data-prompt-scroll
+                  className={`h-[24vh] flex-1 select-none overscroll-contain overflow-y-auto pr-1 text-sm leading-6 md:h-auto md:max-h-40 md:select-text md:text-base ${
                   showControls ? "pointer-events-auto" : "pointer-events-none"
-                }`}>
+                }`}
+                  onContextMenu={(event) => {
+                    if (isMobilePointer()) event.preventDefault();
+                  }}
+                  style={{ WebkitOverflowScrolling: "touch" }}
+                >
                   {renderPromptText(currentVideo.prompt)}
                 </div>
                 <div className={`flex flex-col gap-2 shrink-0 ${
@@ -1109,8 +1214,19 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleCopyPrompt}
-                    className="hidden shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 p-1.5 text-white/45 transition-all hover:scale-105 hover:bg-white/10 hover:text-white focus:outline-none focus-visible:border-white/40 md:flex"
-                    title={isCopied ? "コピーしました" : "プロンプトをコピー"}
+                    disabled={!hasCurrentPrompt}
+                    className={`hidden shrink-0 items-center justify-center rounded-xl border p-1.5 transition-all focus:outline-none focus-visible:border-white/40 md:flex ${
+                      hasCurrentPrompt
+                        ? "border-white/10 bg-white/5 text-white/45 hover:scale-105 hover:bg-white/10 hover:text-white"
+                        : "cursor-not-allowed border-white/5 bg-white/[0.03] text-white/20"
+                    }`}
+                    title={
+                      hasCurrentPrompt
+                        ? isCopied
+                          ? "コピーしました"
+                          : "プロンプトをコピー"
+                        : "コピーできるプロンプトがありません"
+                    }
                   >
                     {isCopied ? (
                       <Icon className="h-3.5 w-3.5 text-emerald-300">
@@ -1149,22 +1265,6 @@ export default function App() {
                   </button>
                 </div>
               </div>
-              {currentVideo.tags.length > 0 && (
-                <div className="mb-3 flex flex-wrap gap-1.5">
-                  {currentVideo.tags.map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => openTagGallery(tag)}
-                      className={`rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/75 backdrop-blur-md transition-colors hover:border-blue-300/50 hover:bg-blue-500/25 hover:text-blue-100 focus:outline-none focus-visible:border-blue-200 ${
-                        showControls ? "pointer-events-auto" : "pointer-events-none"
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -1178,6 +1278,8 @@ export default function App() {
             <button
               type="button"
               onClick={openGallery}
+              onTouchStart={stopMobileControlTouch}
+              onTouchEnd={stopMobileControlTouch}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
               title="ギャラリー一覧に戻る"
             >
@@ -1185,7 +1287,35 @@ export default function App() {
             </button>
             <button
               type="button"
+              onClick={() => handleLikeVideo(currentVideo.id)}
+              onTouchStart={stopMobileControlTouch}
+              onTouchEnd={stopMobileControlTouch}
+              disabled={isLikePending}
+              className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
+                likedVideoIds.has(currentVideo.id) ? "text-pink-400" : ""
+              }`}
+              title={likedVideoIds.has(currentVideo.id) ? "いいねを取り消す" : "いいね！"}
+            >
+              <Icon
+                className={`h-[18px] w-[18px] transition-transform ${
+                  likedVideoIds.has(currentVideo.id)
+                    ? "scale-110 fill-pink-500 stroke-pink-500"
+                    : ""
+                }`}
+              >
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </Icon>
+              {(likesMap[currentVideo.id] || 0) > 0 && (
+                <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-black/70 px-1 text-center font-mono text-[10px] leading-4 text-white/80">
+                  {likesMap[currentVideo.id]}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
               onClick={() => setIsMuted((muted) => !muted)}
+              onTouchStart={stopMobileControlTouch}
+              onTouchEnd={stopMobileControlTouch}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
               title={isMuted ? "Unmute" : "Mute"}
               aria-pressed={!isMuted}
@@ -1206,26 +1336,32 @@ export default function App() {
             </button>
             <button
               type="button"
-              onClick={() => handleLikeVideo(currentVideo.id)}
-              disabled={isLikePending}
-              className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
-                likedVideoIds.has(currentVideo.id) ? "text-pink-400" : ""
+              onClick={handleCopyPrompt}
+              onTouchStart={stopMobileControlTouch}
+              onTouchEnd={handleMobileCopyTouchEnd}
+              disabled={!hasCurrentPrompt}
+              className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-xl backdrop-blur-xl transition focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
+                hasCurrentPrompt
+                  ? "border-white/10 bg-black/30 text-white/70 hover:bg-black/45 hover:text-white"
+                  : "cursor-not-allowed border-white/5 bg-black/20 text-white/25"
               }`}
-              title={likedVideoIds.has(currentVideo.id) ? "いいねを取り消す" : "いいね！"}
+              title={
+                hasCurrentPrompt
+                  ? isCopied
+                    ? "コピーしました"
+                    : "プロンプトをコピー"
+                  : "コピーできるプロンプトがありません"
+              }
             >
-              <Icon
-                className={`h-[18px] w-[18px] transition-transform ${
-                  likedVideoIds.has(currentVideo.id)
-                    ? "scale-110 fill-pink-500 stroke-pink-500"
-                    : ""
-                }`}
-              >
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-              </Icon>
-              {(likesMap[currentVideo.id] || 0) > 0 && (
-                <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-black/70 px-1 text-center font-mono text-[10px] leading-4 text-white/80">
-                  {likesMap[currentVideo.id]}
-                </span>
+              {isCopied ? (
+                <Icon className="h-[18px] w-[18px] text-emerald-300">
+                  <polyline points="20 6 9 17 4 12" />
+                </Icon>
+              ) : (
+                <Icon className="h-[18px] w-[18px]">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </Icon>
               )}
             </button>
           </div>
