@@ -333,9 +333,17 @@ export default function App() {
   const suppressNextPlayerClick = useRef(false);
   const currentVideoIdRef = useRef<string | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
+  const promptScrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     currentVideoIdRef.current = currentVideoId;
+  }, [currentVideoId]);
+
+  useEffect(() => {
+    if (promptScrollRef.current) {
+      promptScrollRef.current.scrollTop = 0;
+    }
+    touchStartPromptScroll.current = null;
   }, [currentVideoId]);
 
   useEffect(() => {
@@ -1251,6 +1259,7 @@ export default function App() {
               <div className="group/prompt relative mb-2 flex items-start gap-2.5 text-base font-light leading-relaxed text-white drop-shadow-2xl">
                 <div
                   data-prompt-scroll
+                  ref={promptScrollRef}
                   className={`h-[24vh] flex-1 select-none overscroll-contain overflow-y-auto pr-1 text-sm leading-6 md:h-auto md:max-h-40 md:select-text md:text-base ${
                   showControls ? "pointer-events-auto" : "pointer-events-none"
                 }`}
