@@ -2,6 +2,15 @@
 
 ## 認証・権限エラーの記録
 
+### wrangler Pages deploy の account ID 自動取得失敗
+
+- 発生日: 2026-06-02
+- コマンド: `npx wrangler pages deploy dist --project-name sora-gallery`
+- エラー概要: Cloudflare API が authentication error code `10000` を返し、ログイン中ユーザーの account ID 自動取得にも失敗した。
+- 次回避けること: account ID を省略したまま同じ Pages deploy を繰り返さない。
+- 次回の推奨手順: ローカル環境変数 `CLOUDFLARE_ACCOUNT_ID` に account ID を設定する。Pages project 用 `wrangler.toml` は `account_id` をサポートしないため記載しない。code `10000` が続く場合は、API token に対象 Pages project の編集権限があるか確認する。
+- 秘密情報: なし。account ID、token、ログファイルの内容は記録しない。
+
 ### npm install のネットワーク制限
 
 - 発生日: 2026-05-22

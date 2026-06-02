@@ -10,7 +10,7 @@ cp wrangler.toml.example wrangler.toml
 npm run dev
 ```
 
-`wrangler.toml` の D1 database ID は、自分の Cloudflare 環境の値に置き換えてください。
+`wrangler.toml` の D1 database ID は、自分の Cloudflare 環境の値に置き換えてください。Pages deploy で account ID の指定が必要な場合は、`CLOUDFLARE_ACCOUNT_ID` 環境変数を使ってください。
 
 ## Build
 
