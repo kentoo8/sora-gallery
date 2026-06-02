@@ -6,8 +6,11 @@ Selected Sora generated videos gallery for static web publishing.
 
 ```bash
 npm install
+cp wrangler.toml.example wrangler.toml
 npm run dev
 ```
+
+`wrangler.toml` の D1 database ID は、自分の Cloudflare 環境の値に置き換えてください。
 
 ## Build
 
