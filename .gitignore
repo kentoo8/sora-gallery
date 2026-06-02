@@ -4,3 +4,4 @@ node_modules/
 .wrangler/
 public/videos.json
 wrangler.toml
+_tmp_notes/
