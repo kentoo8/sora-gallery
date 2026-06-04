@@ -4,6 +4,7 @@ import {
   type MouseEvent,
   type ReactNode,
   type TouchEvent,
+  type WheelEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -27,6 +28,7 @@ type LoadState = "loading" | "ready" | "empty" | "error";
 const UNTAGGED_FILTER = "__untagged__";
 const cameoPattern = /@[A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)*/g;
 const SWIPE_NAVIGATION_COOLDOWN_MS = 500;
+const WHEEL_NAVIGATION_THRESHOLD = 80;
 
 class VideoDataError extends Error {
   constructor(
@@ -332,6 +334,7 @@ export default function App() {
     scrollTop: number;
   } | null>(null);
   const lastSwipeNavigationAt = useRef(0);
+  const lastWheelNavigationAt = useRef(0);
   const suppressNextPlayerClick = useRef(false);
   const currentVideoIdRef = useRef<string | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
@@ -1051,6 +1054,42 @@ export default function App() {
     touchStartPromptScroll.current = null;
   };
 
+  const handleWheel = (event: WheelEvent<HTMLElement>) => {
+    if (!isPlayerOpen) return;
+    if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+    if (Math.abs(event.deltaY) < WHEEL_NAVIGATION_THRESHOLD) return;
+
+    const promptScrollEl = (event.target as HTMLElement).closest<HTMLElement>(
+      "[data-prompt-scroll]",
+    );
+    if (promptScrollEl && promptScrollEl.scrollHeight > promptScrollEl.clientHeight + 1) {
+      const atTop = promptScrollEl.scrollTop <= 0;
+      const atBottom =
+        promptScrollEl.scrollTop + promptScrollEl.clientHeight >=
+        promptScrollEl.scrollHeight - 1;
+      const canScrollPrompt =
+        (event.deltaY > 0 && !atBottom) || (event.deltaY < 0 && !atTop);
+
+      if (canScrollPrompt) return;
+    }
+
+    const now = Date.now();
+    if (now - lastWheelNavigationAt.current < SWIPE_NAVIGATION_COOLDOWN_MS) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    lastWheelNavigationAt.current = now;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.deltaY > 0) {
+      goToNext();
+    } else {
+      goToPrev();
+    }
+  };
+
   const handlePlayerClick = (event: MouseEvent<HTMLElement>) => {
     if (!isPlayerOpen) return;
 
@@ -1121,6 +1160,7 @@ export default function App() {
       onMouseLeave={() => setShowControls(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onWheel={handleWheel}
     >
       <section
         hidden={!isPlayerOpen}
