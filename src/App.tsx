@@ -670,15 +670,6 @@ export default function App() {
     touchStartPromptScroll.current = null;
   }, []);
 
-  const handleMobileCopyTouchEnd = useCallback(
-    (event: TouchEvent<HTMLButtonElement>) => {
-      event.preventDefault();
-      stopMobileControlTouch(event);
-      void handleCopyPrompt();
-    },
-    [handleCopyPrompt, stopMobileControlTouch],
-  );
-
   const handleLikeVideo = useCallback(
     async (videoId: string) => {
       if (isLikePending) return;
@@ -1342,36 +1333,6 @@ export default function App() {
                   <path d="M7 7l5 5-5 5" />
                   <path d="M13 7l5 5-5 5" />
                 </Icon>
-              </button>
-              <button
-                type="button"
-                onClick={handleCopyPrompt}
-                onTouchStart={stopMobileControlTouch}
-                onTouchEnd={handleMobileCopyTouchEnd}
-                disabled={!hasCurrentPrompt}
-                className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-xl backdrop-blur-xl transition focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
-                  hasCurrentPrompt
-                    ? "border-white/10 bg-black/30 text-white/70 hover:bg-black/45 hover:text-white"
-                    : "cursor-not-allowed border-white/5 bg-black/20 text-white/25"
-                }`}
-                title={
-                  hasCurrentPrompt
-                    ? isCopied
-                      ? "コピーしました"
-                      : "プロンプトをコピー"
-                    : "コピーできるプロンプトがありません"
-                }
-              >
-                {isCopied ? (
-                  <Icon className="h-[18px] w-[18px] text-emerald-300">
-                    <polyline points="20 6 9 17 4 12" />
-                  </Icon>
-                ) : (
-                  <Icon className="h-[18px] w-[18px]">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </Icon>
-                )}
               </button>
             </div>
             <div className="max-w-2xl">
