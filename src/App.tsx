@@ -1333,11 +1333,9 @@ export default function App() {
               }
               aria-pressed={isAutoAdvance}
             >
-              <Icon>
-                <polygon points="5 6 18 6 11.5 16 5 6" />
-                <path d="M18 14v6" />
-                <path d="m15 17 3 3 3-3" />
-              </Icon>
+              <span className="font-mono text-[10px] font-semibold tracking-wide">
+                AUTO
+              </span>
             </button>
             <button
               type="button"
@@ -1448,11 +1446,9 @@ export default function App() {
                 }
                 aria-pressed={isAutoAdvance}
               >
-                <Icon className="h-[18px] w-[18px]">
-                  <polygon points="5 6 18 6 11.5 16 5 6" />
-                  <path d="M18 14v6" />
-                  <path d="m15 17 3 3 3-3" />
-                </Icon>
+                <span className="font-mono text-[10px] font-semibold tracking-wide">
+                  AUTO
+                </span>
               </button>
               <button
                 type="button"
