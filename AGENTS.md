@@ -39,6 +39,23 @@
 - `npm run dev`、`npm run preview` などローカルサーバーを起動するコマンドは、最初から権限付きで実行する。
 - 通常実行で port bind を失敗させてから再実行しない。
 
+## 本番反映
+
+- 本番反映は Codex が wrangler deploy を実行するのではなく、ユーザーが手元のターミナルで実行する運用とする。
+- Codex は本番反映が必要な場合、実行すべきコマンドをユーザーに提示する。
+- `public/videos.json` に未コミット変更があり、それを本番に含める運用の場合でも、ユーザーが明示しない限り `public/videos.json` はコミットしない。
+- 本番反映の基本コマンド:
+
+```bash
+cd /Users/kentaokazaki/src/sora-gallery
+git status --short
+git log --oneline -1
+npm run build
+npx wrangler pages deploy dist --project-name sora-gallery
+```
+
+- push は決してしない。
+
 ## 認証・権限エラー時の運用
 
 - 認証、権限、ネットワーク許可、CLIログイン状態で失敗した場合は、同じ方法を無批判に繰り返さない。
