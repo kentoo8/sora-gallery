@@ -28,7 +28,7 @@ type LoadState = "loading" | "ready" | "empty" | "error";
 const UNTAGGED_FILTER = "__untagged__";
 const cameoPattern = /@[A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)*/g;
 const SWIPE_NAVIGATION_COOLDOWN_MS = 500;
-const WHEEL_NAVIGATION_THRESHOLD = 80;
+const WHEEL_NAVIGATION_THRESHOLD = 50;
 
 class VideoDataError extends Error {
   constructor(
