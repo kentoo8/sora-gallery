@@ -337,6 +337,7 @@ export default function App() {
   const progressRef = useRef<HTMLDivElement | null>(null);
   const promptScrollRef = useRef<HTMLDivElement | null>(null);
   const galleryScrollRef = useRef<HTMLDivElement | null>(null);
+  const galleryVideoListRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     currentVideoIdRef.current = currentVideoId;
@@ -497,6 +498,12 @@ export default function App() {
     });
   }, []);
 
+  const scrollGalleryToVideoList = useCallback(() => {
+    requestAnimationFrame(() => {
+      galleryVideoListRef.current?.scrollIntoView({ block: "start" });
+    });
+  }, []);
+
   const openVideo = useCallback((videoId: string) => {
     setCurrentVideoId(videoId);
     pushUrlForVideo(videoId);
@@ -514,9 +521,9 @@ export default function App() {
       setActiveSearchQuery("");
       setActiveTag(tag);
       openGallery();
-      scrollGalleryToTop();
+      scrollGalleryToVideoList();
     },
-    [openGallery, scrollGalleryToTop],
+    [openGallery, scrollGalleryToVideoList],
   );
 
   const openSearchGallery = useCallback(
@@ -525,9 +532,9 @@ export default function App() {
       setActiveSearchQuery(query);
       setActiveTag("");
       openGallery();
-      scrollGalleryToTop();
+      scrollGalleryToVideoList();
     },
-    [openGallery, scrollGalleryToTop],
+    [openGallery, scrollGalleryToVideoList],
   );
 
   const handleTagFilterClick = useCallback(
@@ -541,9 +548,9 @@ export default function App() {
       }
 
       setActiveTag(tag);
-      scrollGalleryToTop();
+      scrollGalleryToVideoList();
     },
-    [activeTag, filteredVideos, openVideo, scrollGalleryToTop],
+    [activeTag, filteredVideos, openVideo, scrollGalleryToVideoList],
   );
 
   const handlePlaybackRequestResult = useCallback(
@@ -1656,6 +1663,8 @@ export default function App() {
                 ))}
               </div>
             )}
+
+            <div ref={galleryVideoListRef} className="scroll-mt-5" />
 
             {filteredVideos.length === 0 ? (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-sm text-white/60">
