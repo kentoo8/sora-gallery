@@ -1273,42 +1273,31 @@ export default function App() {
             <div className="my-1 h-px w-6 bg-white/10" />
             <button
               type="button"
-              onClick={() => setIsShuffleMode((enabled) => !enabled)}
-              className={`toolbar-button ${
-                isShuffleMode ? "text-blue-300" : ""
+              onClick={() => currentVideo && handleLikeVideo(currentVideo.id)}
+              disabled={!currentVideo || isLikePending}
+              className={`toolbar-button relative ${
+                currentVideo && likedVideoIds.has(currentVideo.id) ? "text-pink-400" : ""
               }`}
               title={
-                isShuffleMode
-                  ? "Shuffle mode is on"
-                  : "Shuffle mode is off"
+                currentVideo && likedVideoIds.has(currentVideo.id)
+                  ? "いいねを取り消す"
+                  : "いいね！"
               }
-              aria-pressed={isShuffleMode}
             >
-              <Icon>
-                <polyline points="16 3 21 3 21 8" />
-                <line x1="4" y1="20" x2="21" y2="3" />
-                <polyline points="21 16 21 21 16 21" />
-                <line x1="15" y1="15" x2="21" y2="21" />
-                <line x1="4" y1="4" x2="9" y2="9" />
+              <Icon
+                className={`h-5 w-5 transition-transform ${
+                  currentVideo && likedVideoIds.has(currentVideo.id)
+                    ? "scale-110 fill-pink-500 stroke-pink-500"
+                    : ""
+                }`}
+              >
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
               </Icon>
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsAutoAdvance((enabled) => !enabled)}
-              className={`toolbar-button ${
-                isAutoAdvance ? "text-blue-300" : ""
-              }`}
-              title={
-                isAutoAdvance
-                  ? "Auto advance is on"
-                  : "Auto advance is off"
-              }
-              aria-pressed={isAutoAdvance}
-            >
-              <Icon>
-                <path d="M7 7l5 5-5 5" />
-                <path d="M13 7l5 5-5 5" />
-              </Icon>
+              {currentVideo && (likesMap[currentVideo.id] || 0) > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-black/70 px-1 text-center font-mono text-[10px] leading-4 text-white/80">
+                  {likesMap[currentVideo.id]}
+                </span>
+              )}
             </button>
             <button
               type="button"
@@ -1330,6 +1319,45 @@ export default function App() {
                   <path d="M19 5a9 9 0 0 1 0 14" />
                 </Icon>
               )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAutoAdvance((enabled) => !enabled)}
+              className={`toolbar-button ${
+                isAutoAdvance ? "text-blue-300" : ""
+              }`}
+              title={
+                isAutoAdvance
+                  ? "Auto advance is on"
+                  : "Auto advance is off"
+              }
+              aria-pressed={isAutoAdvance}
+            >
+              <Icon>
+                <path d="M7 7l5 5-5 5" />
+                <path d="M13 7l5 5-5 5" />
+              </Icon>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsShuffleMode((enabled) => !enabled)}
+              className={`toolbar-button ${
+                isShuffleMode ? "text-blue-300" : ""
+              }`}
+              title={
+                isShuffleMode
+                  ? "Shuffle mode is on"
+                  : "Shuffle mode is off"
+              }
+              aria-pressed={isShuffleMode}
+            >
+              <Icon>
+                <polyline points="16 3 21 3 21 8" />
+                <line x1="4" y1="20" x2="21" y2="3" />
+                <polyline points="21 16 21 21 16 21" />
+                <line x1="15" y1="15" x2="21" y2="21" />
+                <line x1="4" y1="4" x2="9" y2="9" />
+              </Icon>
             </button>
           </div>
         </div>
@@ -1515,30 +1543,6 @@ export default function App() {
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                       </Icon>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLikeVideo(currentVideo.id)}
-                    disabled={isLikePending}
-                    className={`hidden shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 transition-all focus:outline-none focus-visible:border-white/40 md:flex ${
-                      likedVideoIds.has(currentVideo.id)
-                        ? "border-pink-500/30 bg-pink-500/10 text-pink-400 hover:scale-105 hover:bg-pink-500/15"
-                        : "border-white/10 bg-white/5 text-white/45 hover:scale-105 hover:bg-white/10 hover:text-white"
-                    }`}
-                    title={likedVideoIds.has(currentVideo.id) ? "いいねを取り消す" : "いいね！"}
-                  >
-                    <Icon
-                      className={`h-3.5 w-3.5 transition-transform ${
-                        likedVideoIds.has(currentVideo.id) ? "fill-pink-500 stroke-pink-500 scale-110" : ""
-                      }`}
-                    >
-                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                    </Icon>
-                    {(likesMap[currentVideo.id] || 0) > 0 && (
-                      <span className="font-mono text-xs font-medium">
-                        {likesMap[currentVideo.id]}
-                      </span>
                     )}
                   </button>
                 </div>
