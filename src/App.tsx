@@ -309,6 +309,7 @@ export default function App() {
   const [isComposing, setIsComposing] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isAutoAdvance, setIsAutoAdvance] = useState(false);
+  const [isShuffleMode, setIsShuffleMode] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -577,15 +578,47 @@ export default function App() {
     [openVideo, playableVideos],
   );
 
+  const jumpToRandomPlayableVideo = useCallback(() => {
+    if (playableVideos.length === 0) return;
+    if (playableVideos.length === 1) {
+      openVideo(playableVideos[0].id);
+      return;
+    }
+
+    let randomIndex = Math.floor(Math.random() * playableVideos.length);
+    if (randomIndex === currentPlayableIndex) {
+      randomIndex = (randomIndex + 1) % playableVideos.length;
+    }
+    openVideo(playableVideos[randomIndex].id);
+  }, [currentPlayableIndex, openVideo, playableVideos]);
+
   const goToNext = useCallback(() => {
+    if (isShuffleMode) {
+      jumpToRandomPlayableVideo();
+      return;
+    }
     const baseIndex = currentPlayableIndex === -1 ? 0 : currentPlayableIndex;
     jumpToPlayableIndex(baseIndex + 1);
-  }, [currentPlayableIndex, jumpToPlayableIndex]);
+  }, [
+    currentPlayableIndex,
+    isShuffleMode,
+    jumpToPlayableIndex,
+    jumpToRandomPlayableVideo,
+  ]);
 
   const goToPrev = useCallback(() => {
+    if (isShuffleMode) {
+      jumpToRandomPlayableVideo();
+      return;
+    }
     const baseIndex = currentPlayableIndex === -1 ? 0 : currentPlayableIndex;
     jumpToPlayableIndex(baseIndex - 1);
-  }, [currentPlayableIndex, jumpToPlayableIndex]);
+  }, [
+    currentPlayableIndex,
+    isShuffleMode,
+    jumpToPlayableIndex,
+    jumpToRandomPlayableVideo,
+  ]);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -609,12 +642,6 @@ export default function App() {
       activeEl.pause();
     }
   }, [handlePlaybackRequestResult, isMuted]);
-
-  const randomVideo = useCallback(() => {
-    if (playableVideos.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * playableVideos.length);
-    jumpToPlayableIndex(randomIndex);
-  }, [jumpToPlayableIndex, playableVideos.length]);
 
   const handleVideoEnded = useCallback(() => {
     if (!isAutoAdvance) return;
@@ -856,7 +883,7 @@ export default function App() {
       }
 
       if (event.key.toLowerCase() === "r") {
-        randomVideo();
+        setIsShuffleMode((enabled) => !enabled);
         return;
       }
 
@@ -887,7 +914,6 @@ export default function App() {
     goToPrev,
     isPlayerOpen,
     openGallery,
-    randomVideo,
     searchQuery,
     showShortcuts,
     toggleFullscreen,
@@ -1190,9 +1216,16 @@ export default function App() {
             <div className="my-1 h-px w-6 bg-white/10" />
             <button
               type="button"
-              onClick={randomVideo}
-              className="toolbar-button"
-              title="Random"
+              onClick={() => setIsShuffleMode((enabled) => !enabled)}
+              className={`toolbar-button ${
+                isShuffleMode ? "text-blue-300" : ""
+              }`}
+              title={
+                isShuffleMode
+                  ? "Shuffle mode is on"
+                  : "Shuffle mode is off"
+              }
+              aria-pressed={isShuffleMode}
             >
               <Icon>
                 <polyline points="16 3 21 3 21 8" />
@@ -1628,7 +1661,7 @@ export default function App() {
                 ["Space", "再生 / 一時停止"],
                 ["M", "ミュート"],
                 ["F", "フルスクリーン"],
-                ["R", "ランダム"],
+                ["R", "シャッフル切替"],
                 ["Esc", "戻る / 閉じる"],
                 ["?", "このパネル"],
               ].map(([key, desc]) => (
