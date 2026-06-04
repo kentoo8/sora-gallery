@@ -336,6 +336,7 @@ export default function App() {
   const currentVideoIdRef = useRef<string | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
   const promptScrollRef = useRef<HTMLDivElement | null>(null);
+  const galleryScrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     currentVideoIdRef.current = currentVideoId;
@@ -490,6 +491,12 @@ export default function App() {
     pushGalleryUrl();
   }, []);
 
+  const scrollGalleryToTop = useCallback(() => {
+    requestAnimationFrame(() => {
+      galleryScrollRef.current?.scrollTo({ top: 0, left: 0 });
+    });
+  }, []);
+
   const openVideo = useCallback((videoId: string) => {
     setCurrentVideoId(videoId);
     pushUrlForVideo(videoId);
@@ -507,8 +514,9 @@ export default function App() {
       setActiveSearchQuery("");
       setActiveTag(tag);
       openGallery();
+      scrollGalleryToTop();
     },
-    [openGallery],
+    [openGallery, scrollGalleryToTop],
   );
 
   const openSearchGallery = useCallback(
@@ -517,8 +525,9 @@ export default function App() {
       setActiveSearchQuery(query);
       setActiveTag("");
       openGallery();
+      scrollGalleryToTop();
     },
-    [openGallery],
+    [openGallery, scrollGalleryToTop],
   );
 
   const handleTagFilterClick = useCallback(
@@ -532,8 +541,9 @@ export default function App() {
       }
 
       setActiveTag(tag);
+      scrollGalleryToTop();
     },
-    [activeTag, filteredVideos, openVideo],
+    [activeTag, filteredVideos, openVideo, scrollGalleryToTop],
   );
 
   const handlePlaybackRequestResult = useCallback(
@@ -1506,7 +1516,7 @@ export default function App() {
         }`}
       >
         <div className="absolute inset-0 bg-black/95 backdrop-blur-3xl" />
-        <div className="absolute inset-0 overflow-y-auto">
+        <div ref={galleryScrollRef} className="absolute inset-0 overflow-y-auto">
           <div className="mx-auto max-w-7xl px-5 pb-40 pt-20 md:px-12 md:pt-28">
             <div className="mb-14 flex flex-col gap-6 md:mb-16 md:flex-row md:items-center md:justify-between md:gap-8">
               <div className="flex min-w-0 flex-col gap-1.5">
@@ -1517,6 +1527,7 @@ export default function App() {
                     setActiveSearchQuery("");
                     setActiveTag("");
                     pushGalleryUrl();
+                    scrollGalleryToTop();
                   }}
                   className="flex w-fit items-center gap-3.5 text-left text-2xl font-light uppercase tracking-widest text-white/55 transition-colors hover:text-white/85 focus:outline-none focus-visible:text-white"
                 >
