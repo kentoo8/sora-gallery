@@ -1334,9 +1334,9 @@ export default function App() {
               aria-pressed={isAutoAdvance}
             >
               <Icon>
-                <polygon points="5 6 16 12 5 18 5 6" />
-                <path d="M15 17h6" />
-                <path d="m18 14 3 3-3 3" />
+                <polygon points="5 6 18 6 11.5 16 5 6" />
+                <path d="M18 14v6" />
+                <path d="m15 17 3 3 3-3" />
               </Icon>
             </button>
             <button
@@ -1353,11 +1353,11 @@ export default function App() {
               aria-pressed={isShuffleMode}
             >
               <Icon>
-                <polyline points="16 3 21 3 21 8" />
-                <line x1="4" y1="20" x2="21" y2="3" />
                 <polyline points="21 16 21 21 16 21" />
-                <line x1="15" y1="15" x2="21" y2="21" />
-                <line x1="4" y1="4" x2="9" y2="9" />
+                <line x1="4" y1="4" x2="21" y2="21" />
+                <polyline points="8 21 3 21 3 16" />
+                <line x1="9" y1="15" x2="3" y2="21" />
+                <line x1="20" y1="4" x2="15" y2="9" />
               </Icon>
             </button>
           </div>
@@ -1449,9 +1449,9 @@ export default function App() {
                 aria-pressed={isAutoAdvance}
               >
                 <Icon className="h-[18px] w-[18px]">
-                  <polygon points="5 6 16 12 5 18 5 6" />
-                  <path d="M15 17h6" />
-                  <path d="m18 14 3 3-3 3" />
+                  <polygon points="5 6 18 6 11.5 16 5 6" />
+                  <path d="M18 14v6" />
+                  <path d="m15 17 3 3 3-3" />
                 </Icon>
               </button>
               <button
@@ -1470,11 +1470,11 @@ export default function App() {
                 aria-pressed={isShuffleMode}
               >
                 <Icon className="h-[18px] w-[18px]">
-                  <polyline points="16 3 21 3 21 8" />
-                  <line x1="4" y1="20" x2="21" y2="3" />
                   <polyline points="21 16 21 21 16 21" />
-                  <line x1="15" y1="15" x2="21" y2="21" />
-                  <line x1="4" y1="4" x2="9" y2="9" />
+                  <line x1="4" y1="4" x2="21" y2="21" />
+                  <polyline points="8 21 3 21 3 16" />
+                  <line x1="9" y1="15" x2="3" y2="21" />
+                  <line x1="20" y1="4" x2="15" y2="9" />
                 </Icon>
               </button>
             </div>
