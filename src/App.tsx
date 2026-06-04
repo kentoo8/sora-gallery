@@ -308,6 +308,7 @@ export default function App() {
   const [activeTag, setActiveTag] = useState("");
   const [isComposing, setIsComposing] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [isAutoAdvance, setIsAutoAdvance] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -614,6 +615,11 @@ export default function App() {
     const randomIndex = Math.floor(Math.random() * playableVideos.length);
     jumpToPlayableIndex(randomIndex);
   }, [jumpToPlayableIndex, playableVideos.length]);
+
+  const handleVideoEnded = useCallback(() => {
+    if (!isAutoAdvance) return;
+    goToNext();
+  }, [goToNext, isAutoAdvance]);
 
   const copyTextToClipboard = useCallback(async (text: string) => {
     try {
@@ -1111,9 +1117,10 @@ export default function App() {
                 }).then((result) => handlePlaybackRequestResult(currentVideo.id, result));
               }
             }}
+            onEnded={handleVideoEnded}
             className="h-full w-full object-contain"
             autoPlay={isPlayerOpen}
-            loop
+            loop={!isAutoAdvance}
             muted={isMuted}
             playsInline
             preload="auto"
@@ -1202,6 +1209,24 @@ export default function App() {
                 <polyline points="21 16 21 21 16 21" />
                 <line x1="15" y1="15" x2="21" y2="21" />
                 <line x1="4" y1="4" x2="9" y2="9" />
+              </Icon>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAutoAdvance((enabled) => !enabled)}
+              className={`toolbar-button ${
+                isAutoAdvance ? "text-blue-300" : ""
+              }`}
+              title={
+                isAutoAdvance
+                  ? "Auto advance is on"
+                  : "Auto advance is off"
+              }
+              aria-pressed={isAutoAdvance}
+            >
+              <Icon>
+                <path d="M7 7l5 5-5 5" />
+                <path d="M13 7l5 5-5 5" />
               </Icon>
             </button>
             <button
@@ -1297,6 +1322,26 @@ export default function App() {
                     <path d="M19 5a9 9 0 0 1 0 14" />
                   </Icon>
                 )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAutoAdvance((enabled) => !enabled)}
+                onTouchStart={stopMobileControlTouch}
+                onTouchEnd={stopMobileControlTouch}
+                className={`flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
+                  isAutoAdvance ? "text-blue-300" : "text-white/70"
+                }`}
+                title={
+                  isAutoAdvance
+                    ? "Auto advance is on"
+                    : "Auto advance is off"
+                }
+                aria-pressed={isAutoAdvance}
+              >
+                <Icon className="h-[18px] w-[18px]">
+                  <path d="M7 7l5 5-5 5" />
+                  <path d="M13 7l5 5-5 5" />
+                </Icon>
               </button>
               <button
                 type="button"
