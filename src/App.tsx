@@ -1367,6 +1367,29 @@ export default function App() {
                   <path d="M13 7l5 5-5 5" />
                 </Icon>
               </button>
+              <button
+                type="button"
+                onClick={() => setIsShuffleMode((enabled) => !enabled)}
+                onTouchStart={stopMobileControlTouch}
+                onTouchEnd={stopMobileControlTouch}
+                className={`flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 ${
+                  isShuffleMode ? "text-blue-300" : "text-white/70"
+                }`}
+                title={
+                  isShuffleMode
+                    ? "Shuffle mode is on"
+                    : "Shuffle mode is off"
+                }
+                aria-pressed={isShuffleMode}
+              >
+                <Icon className="h-[18px] w-[18px]">
+                  <polyline points="16 3 21 3 21 8" />
+                  <line x1="4" y1="20" x2="21" y2="3" />
+                  <polyline points="21 16 21 21 16 21" />
+                  <line x1="15" y1="15" x2="21" y2="21" />
+                  <line x1="4" y1="4" x2="9" y2="9" />
+                </Icon>
+              </button>
             </div>
             <div className="max-w-2xl">
               {currentVideo.description && (
