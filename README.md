@@ -23,6 +23,8 @@ Cloudflare Pages build output is `dist/`.
 ## Data
 
 Published videos are defined in `public/videos.json`.
+`public/videos.json` is intentionally not tracked by Git; treat it as generated
+publish data exported from `sora-player`.
 See `docs/examples/videos.example.json` for a complete example.
 See `docs/sora_player_export_requirements.md` for the planned export boundary from `sora-player`.
 See `docs/r2_publish_runbook.md` for the R2 publishing runbook.

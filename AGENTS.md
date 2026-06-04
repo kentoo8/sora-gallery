@@ -17,6 +17,7 @@
 - `sora-gallery` は完全新規UIではなく、`sora-player` のガワ・雰囲気・操作感をWeb公開用に削ぎ落として再構成する。
 - ただし、ローカルファイルシステム、Finder連携、`config.json`、`server.js`、ローカルタグ編集、`data/tags.json` の直接利用は持ち込まない。
 - 公開用データは `public/videos.json` を正とする。
+- `public/videos.json` は Git 管理しない。`sora-player` から export された公開用生成物として扱い、ユーザーが明示しない限りコミット対象にしない。
 - 認証、管理画面、ローカル管理用の書き込みAPIは入れない。
 - 例外として、公開ユーザー向けの likes API は Pages Functions + D1 で扱う。
 - 変更後、ユーザーの確認を待たずにコミットしてよい。
@@ -43,7 +44,7 @@
 
 - 本番反映は Codex が wrangler deploy を実行するのではなく、ユーザーが手元のターミナルで実行する運用とする。
 - Codex は本番反映が必要な場合、実行すべきコマンドをユーザーに提示する。
-- `public/videos.json` に未コミット変更があり、それを本番に含める運用の場合でも、ユーザーが明示しない限り `public/videos.json` はコミットしない。
+- `public/videos.json` は非 Git 管理の公開用生成物として、ローカルに存在する内容を build に含める。
 - 本番反映の基本コマンド:
 
 ```bash
