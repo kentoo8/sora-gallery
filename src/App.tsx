@@ -1397,13 +1397,17 @@ export default function App() {
                   {currentVideo.description}
                 </p>
               )}
-              <div className="mb-3 flex h-9 flex-wrap items-start gap-1.5 overflow-hidden md:h-auto md:overflow-visible">
+              <div
+                className={`mb-3 flex h-9 flex-nowrap items-start gap-1.5 overflow-x-auto overflow-y-hidden overscroll-x-contain pr-6 [scrollbar-width:none] md:h-auto md:flex-wrap md:overflow-visible md:pr-0 [&::-webkit-scrollbar]:hidden ${
+                  showControls ? "pointer-events-auto" : "pointer-events-none"
+                }`}
+              >
                 {currentVideo.tags.map((tag) => (
                   <button
                     key={tag}
                     type="button"
                     onClick={() => openTagGallery(tag)}
-                    className={`rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/75 backdrop-blur-md transition-colors hover:border-blue-300/50 hover:bg-blue-500/25 hover:text-blue-100 focus:outline-none focus-visible:border-blue-200 ${
+                    className={`shrink-0 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/75 backdrop-blur-md transition-colors hover:border-blue-300/50 hover:bg-blue-500/25 hover:text-blue-100 focus:outline-none focus-visible:border-blue-200 ${
                       showControls ? "pointer-events-auto" : "pointer-events-none"
                     }`}
                   >
