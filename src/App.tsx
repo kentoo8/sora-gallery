@@ -310,7 +310,7 @@ export default function App() {
   const [activeTag, setActiveTag] = useState("");
   const [isComposing, setIsComposing] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [isAutoAdvance, setIsAutoAdvance] = useState(false);
+  const [isAutoAdvance, setIsAutoAdvance] = useState(true);
   const [isShuffleMode, setIsShuffleMode] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
