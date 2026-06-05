@@ -114,6 +114,15 @@ function sortVideos(videos: GalleryVideo[], sortOrder: SortOrder) {
   return [...videos].sort((a, b) => compareByCreatedAt(a, b, sortOrder));
 }
 
+function shuffleIds(ids: string[]) {
+  const shuffled = [...ids];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
 function matchesSearchQuery(video: GalleryVideo, searchValue: string) {
   const queries = searchValue
     .trim()
@@ -312,6 +321,7 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(true);
   const [isAutoAdvance, setIsAutoAdvance] = useState(true);
   const [isShuffleMode, setIsShuffleMode] = useState(false);
+  const [sessionShuffleIds, setSessionShuffleIds] = useState<string[]>([]);
   const [showControls, setShowControls] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -372,6 +382,7 @@ export default function App() {
         const normalized = data.map(normalizeVideo);
 
         setVideos(normalized);
+        setSessionShuffleIds(shuffleIds(normalized.map((video) => video.id)));
         setLoadState(normalized.length > 0 ? "ready" : "empty");
 
         const pathVideoId = getVideoIdFromPath();
@@ -483,6 +494,27 @@ export default function App() {
   const playableVideos = filteredVideos.length > 0 ? filteredVideos : sortedVideos;
   const currentPlayableIndex = currentVideo
     ? playableVideos.findIndex((video) => video.id === currentVideo.id)
+    : -1;
+  const shufflePlayableVideos = useMemo(() => {
+    if (playableVideos.length === 0) return [];
+
+    const playableById = new Map(playableVideos.map((video) => [video.id, video]));
+    const ordered = sessionShuffleIds
+      .map((id) => playableById.get(id))
+      .filter((video): video is GalleryVideo => Boolean(video));
+
+    if (ordered.length === playableVideos.length) {
+      return ordered;
+    }
+
+    const orderedIds = new Set(ordered.map((video) => video.id));
+    return [
+      ...ordered,
+      ...playableVideos.filter((video) => !orderedIds.has(video.id)),
+    ];
+  }, [playableVideos, sessionShuffleIds]);
+  const currentShufflePlayableIndex = currentVideo
+    ? shufflePlayableVideos.findIndex((video) => video.id === currentVideo.id)
     : -1;
   const isPlayerOpen = currentVideo !== null;
   const hasCurrentPrompt = Boolean(currentVideo?.prompt.trim());
@@ -598,46 +630,49 @@ export default function App() {
     [openVideo, playableVideos],
   );
 
-  const jumpToRandomPlayableVideo = useCallback(() => {
-    if (playableVideos.length === 0) return;
-    if (playableVideos.length === 1) {
-      openVideo(playableVideos[0].id);
-      return;
-    }
-
-    let randomIndex = Math.floor(Math.random() * playableVideos.length);
-    if (randomIndex === currentPlayableIndex) {
-      randomIndex = (randomIndex + 1) % playableVideos.length;
-    }
-    openVideo(playableVideos[randomIndex].id);
-  }, [currentPlayableIndex, openVideo, playableVideos]);
+  const jumpToShufflePlayableIndex = useCallback(
+    (index: number) => {
+      if (shufflePlayableVideos.length === 0) return;
+      const nextIndex =
+        ((index % shufflePlayableVideos.length) + shufflePlayableVideos.length) %
+        shufflePlayableVideos.length;
+      openVideo(shufflePlayableVideos[nextIndex].id);
+    },
+    [openVideo, shufflePlayableVideos],
+  );
 
   const goToNext = useCallback(() => {
     if (isShuffleMode) {
-      jumpToRandomPlayableVideo();
+      const baseIndex =
+        currentShufflePlayableIndex === -1 ? 0 : currentShufflePlayableIndex;
+      jumpToShufflePlayableIndex(baseIndex + 1);
       return;
     }
     const baseIndex = currentPlayableIndex === -1 ? 0 : currentPlayableIndex;
     jumpToPlayableIndex(baseIndex + 1);
   }, [
     currentPlayableIndex,
+    currentShufflePlayableIndex,
     isShuffleMode,
     jumpToPlayableIndex,
-    jumpToRandomPlayableVideo,
+    jumpToShufflePlayableIndex,
   ]);
 
   const goToPrev = useCallback(() => {
     if (isShuffleMode) {
-      jumpToRandomPlayableVideo();
+      const baseIndex =
+        currentShufflePlayableIndex === -1 ? 0 : currentShufflePlayableIndex;
+      jumpToShufflePlayableIndex(baseIndex - 1);
       return;
     }
     const baseIndex = currentPlayableIndex === -1 ? 0 : currentPlayableIndex;
     jumpToPlayableIndex(baseIndex - 1);
   }, [
     currentPlayableIndex,
+    currentShufflePlayableIndex,
     isShuffleMode,
     jumpToPlayableIndex,
-    jumpToRandomPlayableVideo,
+    jumpToShufflePlayableIndex,
   ]);
 
   const toggleFullscreen = useCallback(() => {
