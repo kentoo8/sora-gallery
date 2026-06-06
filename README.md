@@ -1,8 +1,10 @@
 # sora-gallery
 
-Selected Sora generated videos gallery for static web publishing.
+選別済みの Sora 生成動画を Web 公開するためのギャラリーです。
 
-## Development
+`sora-player` から export された公開用データを読み取り、Cloudflare Pages 上で静的ギャラリーとして表示します。動画一覧、検索、タグ絞り込み、再生画面は `public/videos.json` を正としてクライアント側で処理し、例外として likes のみ Pages Functions + D1 を使います。
+
+## 開発
 
 ```bash
 npm install
@@ -12,24 +14,26 @@ npm run dev
 
 `wrangler.toml` の D1 database ID は、自分の Cloudflare 環境の値に置き換えてください。Pages deploy で account ID の指定が必要な場合は、`CLOUDFLARE_ACCOUNT_ID` 環境変数を使ってください。
 
-## Build
+## ビルド
 
 ```bash
 npm run build
 ```
 
-Cloudflare Pages build output is `dist/`.
+Cloudflare Pages のビルド出力先は `dist/` です。
 
-## Data
+## 公開データ
 
-Published videos are defined in `public/videos.json`.
-`public/videos.json` is intentionally not tracked by Git; treat it as generated
-publish data exported from `sora-player`.
-See `docs/examples/videos.example.json` for a complete example.
-See `docs/sora_player_export_requirements.md` for the planned export boundary from `sora-player`.
-See `docs/r2_publish_runbook.md` for the R2 publishing runbook.
-See `docs/pre_publish_checklist.md` for the pre-publish checklist.
-See `docs/cloudflare_pages_deploy.md` for the Cloudflare Pages deployment procedure.
+公開動画は `public/videos.json` で定義します。
+
+`public/videos.json` は意図的に Git 管理しません。`sora-player` から export された公開用生成物として扱ってください。
+
+完全な例は `docs/examples/videos.example.json` を参照してください。関連する運用ドキュメントは以下です。
+
+- `docs/sora_player_export_requirements.md`: `sora-player` からの export 境界。
+- `docs/r2_publish_runbook.md`: R2 公開手順。
+- `docs/pre_publish_checklist.md`: 公開前チェックリスト。
+- `docs/cloudflare_pages_deploy.md`: Cloudflare Pages デプロイ手順。
 
 ```ts
 type GalleryVideo = {
@@ -43,11 +47,13 @@ type GalleryVideo = {
 };
 ```
 
-`videoUrl` and `thumbnailUrl` must be public `https://...` URLs.
-`prompt` is a required field, but an empty string is allowed.
+`videoUrl` と `thumbnailUrl` は公開済みの `https://...` 絶対 URL である必要があります。
+`prompt` は必須フィールドですが、空文字は許容します。
 
-Invalid entries are treated as data errors instead of being silently ignored.
-Only the documented fields are allowed; local-only fields such as `filename` or `account` fail validation.
+不正な entry は黙って無視せず、データエラーとして扱います。
+許可されるのは上記スキーマのフィールドだけです。`filename` や `account` などのローカル専用フィールドが含まれている場合は validation に失敗します。
+
+## 検証
 
 ```bash
 npm run validate:data
