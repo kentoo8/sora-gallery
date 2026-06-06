@@ -2,7 +2,9 @@
 
 選別済みの Sora 生成動画を Web 公開するためのギャラリーです。
 
-`sora-player` から export された公開用データを読み取り、Cloudflare Pages 上で静的ギャラリーとして表示します。動画一覧、検索、タグ絞り込み、再生画面は `public/videos.json` を正としてクライアント側で処理し、例外として likes のみ Pages Functions + D1 を使います。
+公開用データを `public/videos.json` として用意し、Cloudflare Pages 上で静的ギャラリーとして表示します。動画一覧、検索、タグ絞り込み、再生画面は `public/videos.json` を正としてクライアント側で処理し、例外として likes のみ Pages Functions + D1 を使います。
+
+[`sora-player`](https://github.com/kentoo8/sora-player) は、ローカルで動画を管理・選別し、このギャラリー向けの `public/videos.json` を export するための一手段です。`sora-player` を使わない場合でも、同じ schema の `public/videos.json` と公開済みの動画・サムネイル URL を用意すれば利用できます。
 
 ## 開発
 
@@ -40,11 +42,11 @@ npx wrangler pages deploy dist --project-name sora-gallery
 
 公開動画は `public/videos.json` で定義します。
 
-`public/videos.json` は意図的に Git 管理しません。`sora-player` から export された公開用生成物として扱ってください。
+`public/videos.json` は意図的に Git 管理しません。`sora-player` などで作成した公開用生成物として扱ってください。
 
 完全な例は `docs/examples/videos.example.json` を参照してください。関連する運用ドキュメントは以下です。
 
-- `docs/sora_player_export_requirements.md`: `sora-player` からの export 境界。
+- `docs/sora_player_export_requirements.md`: `sora-player` を使って export する場合の境界。
 - `docs/r2_publish_runbook.md`: R2 公開手順。
 - `docs/pre_publish_checklist.md`: 公開前チェックリスト。
 - `docs/cloudflare_pages_deploy.md`: Cloudflare Pages デプロイ手順。
