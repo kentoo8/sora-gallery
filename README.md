@@ -22,6 +22,20 @@ npm run build
 
 Cloudflare Pages のビルド出力先は `dist/` です。
 
+## 本番反映
+
+本番反映はローカルのターミナルから実行します。`public/videos.json` は Git 管理外の公開用生成物ですが、ローカルに存在する内容が build に含まれます。
+
+```bash
+cd /Users/kentaokazaki/src/sora-gallery
+git status --short
+git log --oneline -1
+npm run build
+npx wrangler pages deploy dist --project-name sora-gallery
+```
+
+詳細な手順と公開後確認は `docs/cloudflare_pages_deploy.md` を参照してください。
+
 ## 公開データ
 
 公開動画は `public/videos.json` で定義します。
