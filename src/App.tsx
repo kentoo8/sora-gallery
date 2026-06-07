@@ -208,6 +208,34 @@ function Icon({
   );
 }
 
+function HeartIcon({
+  filled,
+  className = "h-5 w-5",
+}: {
+  filled: boolean;
+  className?: string;
+}) {
+  if (filled) {
+    return (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        stroke="none"
+        aria-hidden="true"
+      >
+        <path d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <Icon className={className}>
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+    </Icon>
+  );
+}
+
 function SoraMascotIcon({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <svg
@@ -1319,15 +1347,14 @@ export default function App() {
                   : "いいね！"
               }
             >
-              <Icon
+              <HeartIcon
+                filled={Boolean(currentVideo && likedVideoIds.has(currentVideo.id))}
                 className={`h-5 w-5 transition-transform ${
                   currentVideo && likedVideoIds.has(currentVideo.id)
-                    ? "scale-110 fill-pink-500 stroke-pink-500"
+                    ? "scale-110 text-pink-500"
                     : ""
                 }`}
-              >
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-              </Icon>
+              />
               {currentVideo && (likesMap[currentVideo.id] || 0) > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-black/70 px-1 text-center font-mono text-[10px] leading-4 text-white/80">
                   {likesMap[currentVideo.id]}
@@ -1430,15 +1457,12 @@ export default function App() {
                 }`}
                 title={likedVideoIds.has(currentVideo.id) ? "いいねを取り消す" : "いいね！"}
               >
-                <Icon
+                <HeartIcon
+                  filled={likedVideoIds.has(currentVideo.id)}
                   className={`h-[18px] w-[18px] transition-transform ${
-                    likedVideoIds.has(currentVideo.id)
-                      ? "scale-110 fill-pink-500 stroke-pink-500"
-                      : ""
+                    likedVideoIds.has(currentVideo.id) ? "scale-110 text-pink-500" : ""
                   }`}
-                >
-                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                </Icon>
+                />
                 {(likesMap[currentVideo.id] || 0) > 0 && (
                   <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-black/70 px-1 text-center font-mono text-[10px] leading-4 text-white/80">
                     {likesMap[currentVideo.id]}
