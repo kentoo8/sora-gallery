@@ -48,6 +48,15 @@ input {
   padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
 }
 
+@media (max-width: 767px) {
+  .mobile-player-no-select,
+  .mobile-player-no-select * {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
 @media (min-width: 768px) {
   .player-viewport {
     --mobile-prompt-panel-height: 0px;

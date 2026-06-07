@@ -1285,7 +1285,7 @@ export default function App() {
 
         {currentVideo && (
           <div
-            className={`absolute left-4 top-5 z-30 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 font-mono text-[11px] leading-none text-white/55 shadow-xl backdrop-blur-xl transition-all duration-300 md:hidden ${
+            className={`mobile-player-no-select absolute left-4 top-5 z-30 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 font-mono text-[11px] leading-none text-white/55 shadow-xl backdrop-blur-xl transition-all duration-300 md:hidden ${
               showControls ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
           >
@@ -1443,7 +1443,7 @@ export default function App() {
 
         {currentVideo && (
           <div
-            className={`player-prompt-panel pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/90 via-black/45 to-transparent px-6 pl-16 pt-36 transition-all duration-300 md:min-h-0 md:p-10 ${
+            className={`player-prompt-panel mobile-player-no-select pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/90 via-black/45 to-transparent px-6 pl-16 pt-36 transition-all duration-300 md:min-h-0 md:p-10 ${
               showControls ? "opacity-100" : "opacity-0"
             }`}
           >
