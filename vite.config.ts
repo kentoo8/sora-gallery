@@ -21,6 +21,8 @@ type DevResponse = {
 };
 
 const likes = new Map<string, number>();
+const RATE_LIMIT_WINDOW_MS = 1000;
+let lastMockLikeAt = 0;
 
 function mockLikesApi(): Plugin {
   return {
@@ -52,6 +54,17 @@ function mockLikesApi(): Plugin {
             if (!action) {
               sendJson(devResponse, 400, { error: "Invalid action parameter" });
               return;
+            }
+
+            const now = Date.now();
+            if (action === "like" && now - lastMockLikeAt < RATE_LIMIT_WINDOW_MS) {
+              sendJson(devResponse, 429, {
+                error: "Too many requests. Please wait a moment.",
+              });
+              return;
+            }
+            if (action === "like") {
+              lastMockLikeAt = now;
             }
 
             const currentCount = likes.get(videoId) ?? 0;
