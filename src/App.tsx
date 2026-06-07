@@ -796,7 +796,6 @@ export default function App() {
       const nextLikedVideoIds = new Set(likedVideoIds);
       if (action === "like") {
         nextLikedVideoIds.add(videoId);
-        setLikeBurst({ videoId, key: Date.now() });
       } else {
         nextLikedVideoIds.delete(videoId);
       }
@@ -837,6 +836,9 @@ export default function App() {
             ...prev,
             [videoId]: data.new_count,
           }));
+          if (data.action === "like") {
+            setLikeBurst({ videoId, key: Date.now() });
+          }
         }
       } catch (err: any) {
         setLikesMap((prev) => ({
