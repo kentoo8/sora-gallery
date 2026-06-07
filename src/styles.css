@@ -89,6 +89,28 @@ input {
   .toolbar-button:focus-visible {
     box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3);
   }
+
+  .like-burst {
+    pointer-events: none;
+    position: absolute;
+    inset: -0.625rem;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .like-burst-ring {
+    position: absolute;
+    width: 2.65rem;
+    height: 2.65rem;
+    border-radius: 9999px;
+    border: 1px solid rgb(244 114 182 / 0.85);
+    box-shadow:
+      0 0 18px rgb(236 72 153 / 0.35),
+      inset 0 0 16px rgb(244 114 182 / 0.2);
+    animation: like-burst-ring 680ms ease-out forwards;
+  }
 }
 
 @layer utilities {
@@ -97,5 +119,19 @@ input {
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+}
+
+@keyframes like-burst-ring {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
   }
 }

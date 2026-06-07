@@ -362,6 +362,10 @@ export default function App() {
   const [likesMap, setLikesMap] = useState<Record<string, number>>({});
   const [likedVideoIds, setLikedVideoIds] = useState<Set<string>>(() => new Set());
   const [isLikePending, setIsLikePending] = useState(false);
+  const [likeBurst, setLikeBurst] = useState<{
+    videoId: string;
+    key: number;
+  } | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
   const touchStartX = useRef<number | null>(null);
@@ -792,6 +796,7 @@ export default function App() {
       const nextLikedVideoIds = new Set(likedVideoIds);
       if (action === "like") {
         nextLikedVideoIds.add(videoId);
+        setLikeBurst({ videoId, key: Date.now() });
       } else {
         nextLikedVideoIds.delete(videoId);
       }
@@ -1355,6 +1360,15 @@ export default function App() {
                     : ""
                 }`}
               />
+              {currentVideo && likeBurst?.videoId === currentVideo.id && (
+                <span
+                  key={likeBurst.key}
+                  className="like-burst"
+                  aria-hidden="true"
+                >
+                  <span className="like-burst-ring" />
+                </span>
+              )}
               {currentVideo && (likesMap[currentVideo.id] || 0) > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-black/70 px-1 text-center font-mono text-[10px] leading-4 text-white/80">
                   {likesMap[currentVideo.id]}
@@ -1463,6 +1477,15 @@ export default function App() {
                     likedVideoIds.has(currentVideo.id) ? "scale-110 text-pink-500" : ""
                   }`}
                 />
+                {likeBurst?.videoId === currentVideo.id && (
+                  <span
+                    key={likeBurst.key}
+                    className="like-burst"
+                    aria-hidden="true"
+                  >
+                    <span className="like-burst-ring" />
+                  </span>
+                )}
                 {(likesMap[currentVideo.id] || 0) > 0 && (
                   <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-black/70 px-1 text-center font-mono text-[10px] leading-4 text-white/80">
                     {likesMap[currentVideo.id]}
