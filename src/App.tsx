@@ -379,6 +379,7 @@ export default function App() {
   const lastWheelNavigationAt = useRef(0);
   const suppressNextPlayerClick = useRef(false);
   const currentVideoIdRef = useRef<string | null>(null);
+  const likeBurstTimeoutRef = useRef<number | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
   const promptScrollRef = useRef<HTMLDivElement | null>(null);
   const galleryScrollRef = useRef<HTMLDivElement | null>(null);
@@ -387,6 +388,22 @@ export default function App() {
   useEffect(() => {
     currentVideoIdRef.current = currentVideoId;
   }, [currentVideoId]);
+
+  useEffect(() => {
+    if (likeBurstTimeoutRef.current !== null) {
+      window.clearTimeout(likeBurstTimeoutRef.current);
+      likeBurstTimeoutRef.current = null;
+    }
+    setLikeBurst(null);
+  }, [currentVideoId]);
+
+  useEffect(() => {
+    return () => {
+      if (likeBurstTimeoutRef.current !== null) {
+        window.clearTimeout(likeBurstTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (promptScrollRef.current) {
@@ -784,6 +801,18 @@ export default function App() {
     touchStartPromptScroll.current = null;
   }, []);
 
+  const triggerLikeBurst = useCallback((videoId: string) => {
+    if (likeBurstTimeoutRef.current !== null) {
+      window.clearTimeout(likeBurstTimeoutRef.current);
+    }
+
+    setLikeBurst({ videoId, key: Date.now() });
+    likeBurstTimeoutRef.current = window.setTimeout(() => {
+      setLikeBurst(null);
+      likeBurstTimeoutRef.current = null;
+    }, 760);
+  }, []);
+
   const handleLikeVideo = useCallback(
     async (videoId: string) => {
       if (isLikePending) return;
@@ -837,7 +866,7 @@ export default function App() {
             [videoId]: data.new_count,
           }));
           if (data.action === "like") {
-            setLikeBurst({ videoId, key: Date.now() });
+            triggerLikeBurst(videoId);
           }
         }
       } catch (err: any) {
@@ -859,7 +888,7 @@ export default function App() {
         setIsLikePending(false);
       }
     },
-    [likedVideoIds, isLikePending, likesMap],
+    [likedVideoIds, isLikePending, likesMap, triggerLikeBurst],
   );
 
   const handleMobileLikeTouchEnd = useCallback(
