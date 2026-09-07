@@ -12,6 +12,8 @@ import {
   useState,
 } from "react";
 
+import { readGalleryFilters, galleryUrl, type GalleryFilters } from "./gallery-url";
+
 type GalleryVideo = {
   id: string;
   videoUrl: string;
@@ -156,11 +158,14 @@ function getVideoIdFromPath() {
 }
 
 function pushUrlForVideo(videoId: string) {
-  window.history.pushState({}, "", videoPath(videoId));
+  window.history.pushState({}, "", galleryUrl(window.location.href, videoPath(videoId)));
 }
 
-function pushGalleryUrl() {
-  window.history.pushState({}, "", "/");
+function pushGalleryUrl(filters?: GalleryFilters) {
+  const url = galleryUrl(window.location.href, "/", filters);
+  if (url !== window.location.pathname + window.location.search + window.location.hash) {
+    window.history.pushState({}, "", url);
+  }
 }
 
 function isMobilePointer() {
@@ -342,9 +347,10 @@ export default function App() {
   const [loadError, setLoadError] = useState("");
   const [sortOrder, setSortOrder] = useState<SortOrder>("oldest");
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeSearchQuery, setActiveSearchQuery] = useState("");
-  const [activeTag, setActiveTag] = useState("");
+  const [initialFilters] = useState(() => readGalleryFilters(window.location.search));
+  const [searchQuery, setSearchQuery] = useState(initialFilters.query);
+  const [activeSearchQuery, setActiveSearchQuery] = useState(initialFilters.query);
+  const [activeTag, setActiveTag] = useState(initialFilters.tag);
   const [isComposing, setIsComposing] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isAutoAdvance, setIsAutoAdvance] = useState(true);
@@ -488,6 +494,16 @@ export default function App() {
     }
   }, [isComposing, searchQuery]);
 
+  useEffect(() => {
+    const url = galleryUrl(window.location.href, window.location.pathname, {
+      tag: activeTag,
+      query: activeSearchQuery,
+    });
+    if (url !== window.location.pathname + window.location.search + window.location.hash) {
+      window.history.replaceState(window.history.state, "", url);
+    }
+  }, [activeSearchQuery, activeTag]);
+
   const sortedVideos = useMemo(
     () =>
       sortVideos(
@@ -604,10 +620,12 @@ export default function App() {
       setSearchQuery("");
       setActiveSearchQuery("");
       setActiveTag(tag);
-      openGallery();
+      setCurrentVideoId(null);
+      setShowControls(false);
+      pushGalleryUrl({ tag, query: "" });
       scrollGalleryToVideoList();
     },
-    [openGallery, scrollGalleryToVideoList],
+    [scrollGalleryToVideoList],
   );
 
   const openSearchGallery = useCallback(
@@ -615,10 +633,12 @@ export default function App() {
       setSearchQuery(query);
       setActiveSearchQuery(query);
       setActiveTag("");
-      openGallery();
+      setCurrentVideoId(null);
+      setShowControls(false);
+      pushGalleryUrl({ tag: "", query });
       scrollGalleryToVideoList();
     },
-    [openGallery, scrollGalleryToVideoList],
+    [scrollGalleryToVideoList],
   );
 
   const handleTagFilterClick = useCallback(
@@ -632,9 +652,10 @@ export default function App() {
       }
 
       setActiveTag(tag);
+      pushGalleryUrl({ tag, query: activeSearchQuery });
       scrollGalleryToVideoList();
     },
-    [activeTag, filteredVideos, openVideo, scrollGalleryToVideoList],
+    [activeTag, activeSearchQuery, filteredVideos, openVideo, scrollGalleryToVideoList],
   );
 
   const handlePlaybackRequestResult = useCallback(
@@ -941,6 +962,10 @@ export default function App() {
 
   useEffect(() => {
     const handlePopState = () => {
+      const filters = readGalleryFilters(window.location.search);
+      setSearchQuery(filters.query);
+      setActiveSearchQuery(filters.query);
+      setActiveTag(filters.tag);
       const pathVideoId = getVideoIdFromPath();
       if (pathVideoId && videos.some((video) => video.id === pathVideoId)) {
         setCurrentVideoId(pathVideoId);
@@ -1692,7 +1717,7 @@ export default function App() {
                     setSearchQuery("");
                     setActiveSearchQuery("");
                     setActiveTag("");
-                    pushGalleryUrl();
+                    pushGalleryUrl({ tag: "", query: "" });
                     scrollGalleryToTop();
                   }}
                   className="flex w-fit items-center gap-3.5 text-left text-2xl font-light uppercase tracking-widest text-white/55 transition-colors hover:text-white/85 focus:outline-none focus-visible:text-white"

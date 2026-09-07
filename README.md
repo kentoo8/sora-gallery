@@ -6,6 +6,10 @@
 
 [`sora-player`](https://github.com/kentoo8/sora-player) は、ローカルで動画を管理・選別し、このギャラリー向けの `public/videos.json` を export するための一手段です。`sora-player` を使わない場合でも、同じ schema の `public/videos.json` と公開済みの動画・サムネイル URL を用意すれば利用できます。
 
+## 検索結果の共有
+
+タグを選択したり検索語を入力したりすると、ブラウザのURLに条件が反映されます。そのURLをコピーして共有すると、同じ条件で絞り込んだ一覧を開けます。動画を開いた場合も絞り込み条件は保持されます。
+
 ## 開発
 
 ```bash
@@ -29,7 +33,7 @@ Cloudflare Pages のビルド出力先は `dist/` です。
 本番反映はローカルのターミナルから実行します。`public/videos.json` は Git 管理外の公開用生成物ですが、ローカルに存在する内容が build に含まれます。
 
 ```bash
-cd /Users/kentaokazaki/src/sora-gallery
+cd ~/src/sora-gallery
 git status --short
 git log --oneline -1
 npm run build
