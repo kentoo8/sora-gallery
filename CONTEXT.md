@@ -2,6 +2,17 @@
 
 ## 認証・権限エラーの記録
 
+### Cloudflare のログイン方法と別アカウントによる認証失敗
+
+- 確認日: 2026-09-07
+- 本番管理用の Cloudflare ログインには、Google アカウントの SSO を使う（ユーザー確認済み）。ブラウザでは、既存の `sora-gallery` プロジェクトが見える Google アカウントでログインする。
+- コマンド: `npx wrangler pages deploy dist --project-name sora-gallery`
+- エラー概要: 別アカウントで Wrangler の OAuth 認可を行ったため、ログイン中の account ID とデプロイ先が一致せず、authentication error code `10000` になった。
+- 次回避けること: ブラウザのログイン先を確認せずに OAuth 認可やデプロイを繰り返さない。
+- 復旧手順: ブラウザで本番管理用の Google SSO ログインに切り替え、`npx wrangler logout` → `npx wrangler login` → `npx wrangler whoami` の順に実行する。デプロイ先の account ID と一致することを確認してから再デプロイする。
+- 確認結果: 再ログイン後、デプロイ先と account ID が一致した。本番反映の成功は未確認。
+- 個人情報・秘密情報: メールアドレス、account ID、OAuth URL、認証情報は記録しない。
+
 ### wrangler Pages deploy の account ID 自動取得失敗
 
 - 発生日: 2026-06-02
