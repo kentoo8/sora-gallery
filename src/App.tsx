@@ -1092,6 +1092,7 @@ export default function App() {
   }, []);
 
   const handleTouchStart = (event: TouchEvent) => {
+    suppressNextPlayerClick.current = false;
     touchStartX.current = event.touches[0].clientX;
     touchStartY.current = event.touches[0].clientY;
     const promptScrollEl = (event.target as HTMLElement).closest<HTMLElement>(
@@ -1152,7 +1153,11 @@ export default function App() {
         } else {
           goToPrev();
         }
-      } else if (isMobilePointer()) {
+      } else if (
+        isMobilePointer() &&
+        Math.abs(deltaX) <= 10 &&
+        Math.abs(deltaY) <= 10
+      ) {
         const target = event.target as HTMLElement;
         const isInteractive = Boolean(
           target.closest("button, a, input, textarea, select, label, [role='button']"),
@@ -1162,6 +1167,7 @@ export default function App() {
           suppressNextPlayerClick.current = true;
           event.preventDefault();
           event.stopPropagation();
+          if (target === activeVideoRef.current) togglePlayback();
           setShowControls((visible) => !visible);
         }
       }
@@ -1222,6 +1228,8 @@ export default function App() {
     const isInteractive = Boolean(
       target.closest("button, a, input, textarea, select, label, [role='button']"),
     );
+
+    if (target === activeVideoRef.current) togglePlayback();
 
     if (!showControls) {
       setShowControls(true);
