@@ -12,6 +12,8 @@ import {
   useState,
 } from "react";
 
+import { requestVideoPlayback } from "./video-playback";
+
 import { readGalleryFilters, galleryUrl, type GalleryFilters } from "./gallery-url";
 
 type GalleryVideo = {
@@ -172,23 +174,6 @@ function isMobilePointer() {
   return window.matchMedia("(hover: none), (pointer: coarse)").matches;
 }
 
-async function requestVideoPlayback(
-  element: HTMLVideoElement,
-  { allowMutedFallback }: { allowMutedFallback: boolean },
-) {
-  try {
-    await element.play();
-    return "played";
-  } catch {
-    if (!allowMutedFallback) {
-      return "blocked";
-    }
-    element.muted = true;
-    element.defaultMuted = true;
-    await element.play().catch(() => {});
-    return "muted-fallback";
-  }
-}
 
 function Icon({
   children,
@@ -352,7 +337,10 @@ export default function App() {
   const [activeSearchQuery, setActiveSearchQuery] = useState(initialFilters.query);
   const [activeTag, setActiveTag] = useState(initialFilters.tag);
   const [isComposing, setIsComposing] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const mutedRef = useRef(false);
+  const playbackRequestRef = useRef(0);
+  const [showEnableSound, setShowEnableSound] = useState(false);
   const [isAutoAdvance, setIsAutoAdvance] = useState(true);
   const [isShuffleMode, setIsShuffleMode] = useState(false);
   const [sessionShuffleIds, setSessionShuffleIds] = useState<string[]>([]);
@@ -658,37 +646,46 @@ export default function App() {
     [activeTag, activeSearchQuery, filteredVideos, openVideo, scrollGalleryToVideoList],
   );
 
-  const handlePlaybackRequestResult = useCallback(
-    (videoId: string, result: Awaited<ReturnType<typeof requestVideoPlayback>>) => {
-      if (currentVideoIdRef.current !== videoId) return;
-
-      if (result === "played") {
-        setBlockedPlaybackVideoId(null);
-        return;
-      }
-
-      if (result === "muted-fallback") {
-        setBlockedPlaybackVideoId(null);
-        setIsMuted(true);
-        return;
-      }
-
-      setBlockedPlaybackVideoId(videoId);
-    },
-    [],
-  );
-
-  const resumeBlockedPlayback = useCallback(() => {
+  const playActiveVideo = useCallback(() => {
     const id = currentVideoIdRef.current;
-    const activeEl = activeVideoRef.current;
-    if (!id || !activeEl) return;
+    const element = activeVideoRef.current;
+    if (!id || !element) return;
+    const request = ++playbackRequestRef.current;
+    const source = element.getAttribute("src");
+    const isCurrent = () => request === playbackRequestRef.current &&
+      currentVideoIdRef.current === id && activeVideoRef.current === element &&
+      element.getAttribute("src") === source;
+    element.muted = mutedRef.current;
+    element.defaultMuted = mutedRef.current;
+    requestVideoPlayback(element, isCurrent).then((result) => {
+      if (!isCurrent() || result === "cancelled") return;
+      if (result === "muted-fallback" || result === "muted-blocked") {
+        mutedRef.current = true;
+        setIsMuted(true);
+        setShowEnableSound(true);
+      }
+      setBlockedPlaybackVideoId(
+        result === "blocked" || result === "muted-blocked" ? id : null,
+      );
+    });
+  }, []);
 
-    activeEl.muted = isMuted;
-    activeEl.defaultMuted = isMuted;
-    requestVideoPlayback(activeEl, { allowMutedFallback: isMuted }).then((result) =>
-      handlePlaybackRequestResult(id, result),
-    );
-  }, [handlePlaybackRequestResult, isMuted]);
+  const changeMuted = useCallback((muted: boolean) => {
+    ++playbackRequestRef.current;
+    mutedRef.current = muted;
+    setIsMuted(muted);
+    setShowEnableSound(false);
+    const element = activeVideoRef.current;
+    if (!element || !currentVideoIdRef.current) return;
+    element.muted = muted;
+    element.defaultMuted = muted;
+    // 音を出す操作のイベント内で再生を要求する。
+    if (!muted) playActiveVideo();
+  }, [playActiveVideo]);
+
+  const toggleMuted = useCallback(() => {
+    changeMuted(!mutedRef.current);
+  }, [changeMuted]);
 
   const jumpToPlayableIndex = useCallback(
     (index: number) => {
@@ -760,13 +757,12 @@ export default function App() {
     if (!activeEl) return;
 
     if (activeEl.paused) {
-      requestVideoPlayback(activeEl, { allowMutedFallback: isMuted }).then((result) =>
-        handlePlaybackRequestResult(id, result),
-      );
+      playActiveVideo();
     } else {
+      ++playbackRequestRef.current;
       activeEl.pause();
     }
-  }, [handlePlaybackRequestResult, isMuted]);
+  }, [playActiveVideo]);
 
   const handleVideoEnded = useCallback(() => {
     if (!isAutoAdvance) return;
@@ -1017,7 +1013,7 @@ export default function App() {
       }
 
       if (event.key.toLowerCase() === "m") {
-        setIsMuted((muted) => !muted);
+        toggleMuted();
         return;
       }
 
@@ -1062,6 +1058,7 @@ export default function App() {
     showShortcuts,
     toggleFullscreen,
     togglePlayback,
+    toggleMuted,
   ]);
 
   useEffect(() => {
@@ -1073,13 +1070,10 @@ export default function App() {
       return;
     }
 
-    element.muted = isMuted;
-    element.defaultMuted = isMuted;
     element.setAttribute("webkit-playsinline", "true");
-    requestVideoPlayback(element, { allowMutedFallback: isMuted }).then((result) =>
-      handlePlaybackRequestResult(currentVideo.id, result),
-    );
-  }, [currentVideo, handlePlaybackRequestResult, isMuted, isPlayerOpen]);
+    playActiveVideo();
+    return () => { ++playbackRequestRef.current; };
+  }, [currentVideo, isPlayerOpen, playActiveVideo]);
 
   useEffect(() => {
     let animationFrameId = 0;
@@ -1298,35 +1292,31 @@ export default function App() {
           <video
             ref={(element) => {
               activeVideoRef.current = element;
-              if (element) {
-                element.muted = isMuted;
-                element.defaultMuted = isMuted;
-                element.setAttribute("webkit-playsinline", "true");
-              }
             }}
             src={currentVideo?.videoUrl}
             onError={() => {
               if (currentVideo) markVideoUnavailable(currentVideo.id);
             }}
-            onLoadedMetadata={(event) => {
-              if (currentVideo && isPlayerOpen) {
-                requestVideoPlayback(event.currentTarget, {
-                  allowMutedFallback: isMuted,
-                }).then((result) => handlePlaybackRequestResult(currentVideo.id, result));
-              }
-            }}
             onEnded={handleVideoEnded}
             className="h-full w-full object-contain"
-            autoPlay={isPlayerOpen}
             loop={!isAutoAdvance}
             muted={isMuted}
             playsInline
             preload="auto"
           />
+          {showEnableSound && isPlayerOpen && (
+            <button
+              type="button"
+              onClick={() => changeMuted(false)}
+              className="absolute left-1/2 top-24 z-20 -translate-x-1/2 rounded-full border border-white/30 bg-black/75 px-5 py-3 text-sm font-medium text-white shadow-xl backdrop-blur-xl hover:bg-black/90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            >
+              音を出す
+            </button>
+          )}
           {currentVideo && blockedPlaybackVideoId === currentVideo.id && (
             <button
               type="button"
-              onClick={resumeBlockedPlayback}
+              onClick={playActiveVideo}
               className="absolute left-1/2 top-1/2 z-20 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white shadow-2xl backdrop-blur-2xl transition hover:scale-105 hover:bg-black/75 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
               title="Play"
             >
@@ -1433,7 +1423,7 @@ export default function App() {
             </button>
             <button
               type="button"
-              onClick={() => setIsMuted((muted) => !muted)}
+              onClick={toggleMuted}
               className="toolbar-button"
               title={isMuted ? "Unmute" : "Mute"}
               aria-pressed={!isMuted}
@@ -1550,7 +1540,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                onClick={() => setIsMuted((muted) => !muted)}
+                onClick={toggleMuted}
                 onTouchStart={stopMobileControlTouch}
                 onTouchEnd={stopMobileControlTouch}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/70 shadow-xl backdrop-blur-xl transition hover:bg-black/45 hover:text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
