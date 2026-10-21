@@ -10,22 +10,28 @@ Cloudflare dashboard の Workers & Pages 画面にある `Upload your static fil
 
 ## デプロイ
 
-production に反映する場合:
+production に反映する場合は、[公開前チェックリスト](pre_publish_checklist.md) を確認する。公開する `public/videos.json` は Git 管理外のため、コミットだけでなく内容も確認する。
 
 ```bash
-cd /Users/kentaokazaki/src/sora-gallery
+cd ~/src/sora-gallery
+git status --short
+git log --oneline -1
 npm run validate:remote
 npm run build
-npx wrangler pages deploy dist --project-name sora-gallery
+npx wrangler pages deploy dist --project-name sora-gallery --branch main
 ```
 
 preview 環境として確認する場合:
 
 ```bash
-cd /Users/kentaokazaki/src/sora-gallery
+cd ~/src/sora-gallery
 npm run build
 npx wrangler pages deploy dist --project-name sora-gallery --branch preview-d1-smoke
 ```
+
+mise を使う場合は `npm` / `npx` の前に `mise exec --` を付ける。account ID の指定が必要な場合は、ローカル環境変数 `CLOUDFLARE_ACCOUNT_ID` を使う。認証情報はリポジトリに記録しない。
+
+停止中に通常の `dist/` をデプロイすると再公開される。[緊急停止方針](emergency-shutdown.md) に従い、再公開の許可を先に確認する。自動反映できるセキュリティ更新の範囲は [更新方針](security-update-preparation.md) を参照する。
 
 重要:
 
@@ -65,7 +71,7 @@ https://4531bb51.sora-gallery.pages.dev
 確認すること:
 
 - 一覧が表示される。
-- `videos.json` が 99 件で取得できる。
+- `videos.json` の内容と件数が、今回公開したデータと一致する。
 - 個別動画 URL が 404 にならない。
 - R2 の動画が再生できる。
 - `npm run validate:remote` が通っている。

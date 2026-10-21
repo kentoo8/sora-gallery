@@ -1,9 +1,8 @@
 # 公開前チェックリスト
 
-## 現在の公開対象
+## 公開対象の確認
 
-- 公開タグ: `高木ゆい`
-- 公開件数: 99
+- 公開タグと件数: 今回の公開対象を確認する。初回公開時の対象はタグ `高木ゆい`、99 件だったが、以降の固定条件にはしない。
 - 動画保存先: Cloudflare R2 `sora-gallery-media`
 - 公開 base URL: `https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev`
 - 独自ドメイン: 初期公開では使わない
@@ -12,7 +11,7 @@
 
 ### データ
 
-- `public/videos.json` が 99 件である。
+- `public/videos.json` の内容と件数が、今回の公開対象と一致する。
 - `public/videos.json` が `npm run validate:data` を通る。
 - `public/videos.json` が `npm run validate:remote` を通る。
 - `filename`, `account`, ローカルパス、`config.json`, `generations.json`, `data/tags.json` が含まれない。
@@ -21,8 +20,7 @@
 
 ### R2
 
-- `videos/` に動画 99 件がある。
-- `thumbnails/` にサムネイル 99 件がある。
+- 公開対象の各動画に対応する動画本体とサムネイルがある。
 - 代表動画 URL が 200 OK を返す。
 - 代表サムネイル URL が 200 OK を返す。
 - 疎通確認用 object は削除済みである。
@@ -67,15 +65,17 @@ npm run build
 - Pages Functions / D1 以外の動的機能や管理 API は入れない。
 - Cloudflare dashboard の Workers & Pages 画面にある `Upload your static files` / `Worker name` フローは使わない。
 - 公開は `wrangler pages deploy dist --project-name sora-gallery` を正とする。
-- push は Codex からは行わない。
+- 通常作業の push と、自動反映を許可された更新は区別する。例外の範囲は [セキュリティ更新方針](security-update-preparation.md) に従う。
 - Cloudflare Pages の公開後、以下を確認する。
   - `/` が表示できる。
-  - `/videos.json` が 99 件で取得できる。
+  - `/videos.json` の内容と件数が、今回公開したデータと一致する。
   - `/video/7336a931-c2d1-477b-b9a6-63db1aacd7c2` のような個別 URL が表示できる。
   - 代表動画が再生できる。
   - 音声が出る。
 
-## 未確認
+## 初回公開前の未確認事項（当時の記録）
+
+以下は初回公開前の記録であり、現在の未確認事項を表すものではない。以後の確認結果は [セキュリティ保守記録](security-maintenance.md) などの実施記録を参照し、今回の公開でも上記のチェックを行う。
 
 - Cloudflare Pages 上での実表示。
 - Cloudflare Pages 上での SPA fallback。

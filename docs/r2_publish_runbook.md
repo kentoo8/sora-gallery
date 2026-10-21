@@ -162,7 +162,7 @@ thumbnails/{publicId}.webp
    npm run build
    ```
 
-9. `public/videos.json` をコミットする。
+9. `public/videos.json` はコミットせず、[Pages デプロイ手順](cloudflare_pages_deploy.md) に沿ってビルド成果物を反映する。
 
 ## 更新公開の流れ
 
@@ -173,7 +173,7 @@ thumbnails/{publicId}.webp
 5. `delete-manifest.json` に削除対象がある場合は、R2 から動画本体とサムネイルを削除する。
 6. `/private/tmp/sora-gallery-sync/videos.json` を `public/videos.json` に反映する。
 7. `sora-gallery` で `npm run validate:data`、`npm run validate:remote`、`npm run build` を実行する。
-8. `public/videos.json` をコミットする。
+8. `public/videos.json` はコミットせず、[Pages デプロイ手順](cloudflare_pages_deploy.md) に沿ってビルド成果物を反映する。
 
 既存動画の公開 ID は manifest で維持する。manifest を消すと個別 URL と将来の likes キーが変わるため、公開後は消さない。
 
@@ -292,7 +292,7 @@ https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/2ef13128-00a8-46e
 2. 代表 object が `https://sora-media.hio1345.com/videos/{publicId}.mp4` で読めることを確認する。
 3. 同じ manifest を使い、`--public-base-url https://sora-media.hio1345.com` で `public/videos.json` を再生成する。
 4. `npm run validate:data` と `npm run build` を実行する。
-5. `public/videos.json` をコミットする。
+5. `public/videos.json` はコミットせず、[Pages デプロイ手順](cloudflare_pages_deploy.md) に沿ってビルド成果物を反映する。
 
 ## 非公開化・削除
 
