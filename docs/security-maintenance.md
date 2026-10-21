@@ -8,19 +8,21 @@
 - Access の本番URL用設定には Zero Trust プランの有効化が必要で、規約と超過料金の請求への同意を求められたため、契約は実施していない。
 - R2 の動画・サムネイル直リンクは今回の停止対象に含めていない。サイト停止だけでは配信停止にならない。
 - ローカルの依存関係は既存の指定範囲内で更新し、`npm audit` は 8 件から 0 件になった。
-- 更新後の `npm test`（31 件）、`npm run lint`、`npm run build` は成功。ブラウザでの操作確認と更新版の本番反映は未実施。
-- Homebrew の Node.js は 26.12.0 のままで、本体のセキュリティ修正版への更新は未完了。ギャラリー本番は静的配信と Pages Functions であり、ローカルの Node.js サーバーを公開している構成ではない。
+- 更新後の `npm test`（31 件）、`npm run lint`、`npm run build` は Node.js 26.12.1 で成功。ブラウザでの操作確認と更新版の本番反映は未実施。
+- Homebrew の Node.js は 26.12.0 のままだが、mise で公式配布の修正版 26.12.1 を導入し、`mise.toml` でこのプロジェクトに固定した。ギャラリー本番は静的配信と Pages Functions であり、ローカルの Node.js サーバーを公開している構成ではない。
 
 ## 再公開前
 
 現在のローカル `dist/` は通常のギャラリーのビルド成果物であり、停止案内ではない。通常のデプロイコマンドを実行すると再公開されるため、修正と動作確認が完了するまでデプロイしない。
 
 ```bash
-npm ci
-npm audit
-npm test
-npm run lint
-npm run build
+mise install
+mise exec -- node --version
+mise exec -- npm ci
+mise exec -- npm audit
+mise exec -- npm test
+mise exec -- npm run lint
+mise exec -- npm run build
 ```
 
 ブラウザで一覧、検索、個別動画、再生・音声、いいねを確認する。Node.js 本体と開発用ツールの残る問題も確認してから、再公開の可否を判断する。

@@ -20,7 +20,17 @@
 
 ## 開発
 
-Node.js はサポート中の LTS の最新のセキュリティ修正版を使用してください。
+Node.js はサポート中のバージョンの最新セキュリティ修正版を使用してください。
+
+mise を使う場合は、プロジェクトのフォルダで次を実行すると、指定版の Node.js で開発できます。
+
+```bash
+mise install
+mise exec -- npm ci
+mise exec -- npm run dev
+```
+
+mise を使わない場合:
 
 ```bash
 npm ci
