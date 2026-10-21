@@ -20,8 +20,10 @@
 
 ## 開発
 
+Node.js はサポート中の LTS の最新のセキュリティ修正版を使用してください。
+
 ```bash
-npm install
+npm ci
 cp wrangler.toml.example wrangler.toml
 npm run dev
 ```
@@ -49,6 +51,7 @@ npx wrangler pages deploy dist --project-name sora-gallery
 ```
 
 詳細な手順と公開後確認は `docs/cloudflare_pages_deploy.md` を参照してください。
+一時停止中の状態と再公開前の確認は [セキュリティ保守](docs/security-maintenance.md) を参照してください。
 
 ## 公開データ
 
