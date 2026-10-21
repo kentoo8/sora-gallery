@@ -61,7 +61,7 @@ npx wrangler pages deploy dist --project-name sora-gallery
 ```
 
 詳細な手順と公開後確認は `docs/cloudflare_pages_deploy.md` を参照してください。
-一時停止中の状態と再公開前の確認は [セキュリティ保守](docs/security-maintenance.md) を参照してください。
+一時停止・再公開の記録と公開前の確認は [セキュリティ保守](docs/security-maintenance.md) を参照してください。
 
 ## 公開データ
 
