@@ -27,6 +27,10 @@
 - 不確実なものは「未確認」と明記する。
 - push は決してしない。
 
+## 定期監視によるセキュリティ更新案の準備
+
+- ユーザーが承認した更新準備は `docs/security-update-preparation.md` に従い、専用 worktree 内で行ってよい。元の作業場所への反映、push、PR作成、通常の本番反映、自動再公開は含まない。
+
 ## 隣接リポジトリ操作
 
 - `/Users/kentaokazaki/src/sora-gallery` から作業している場合、`/Users/kentaokazaki/src/sora-player` は writable root 外である。
