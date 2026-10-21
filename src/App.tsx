@@ -1167,7 +1167,6 @@ export default function App() {
           suppressNextPlayerClick.current = true;
           event.preventDefault();
           event.stopPropagation();
-          if (target === activeVideoRef.current) togglePlayback();
           setShowControls((visible) => !visible);
         }
       }
@@ -1228,8 +1227,6 @@ export default function App() {
     const isInteractive = Boolean(
       target.closest("button, a, input, textarea, select, label, [role='button']"),
     );
-
-    if (target === activeVideoRef.current) togglePlayback();
 
     if (!showControls) {
       setShowControls(true);
@@ -1306,7 +1303,7 @@ export default function App() {
               if (currentVideo) markVideoUnavailable(currentVideo.id);
             }}
             onEnded={handleVideoEnded}
-            className="h-full w-full object-contain"
+            className="h-full w-full object-contain pointer-events-none"
             loop={!isAutoAdvance}
             muted={isMuted}
             playsInline
