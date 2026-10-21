@@ -128,7 +128,7 @@ thumbnails/{publicId}.webp
 
 4. 同期計画に従って、新規動画とサムネイルを R2 にアップロードする。
 
-   初期のアップロード手段は `rclone` とする。`wrangler r2 object put` は単発確認には使えるが、動画 100 本規模の bulk upload には使わない。
+   初期のアップロード手段は `rclone` とする。`wrangler r2 object put` は単発確認には使えるが、動画の一括アップロード には使わない。
 
    ```bash
    rclone copy /private/tmp/sora-gallery-sync/videos r2:sora-gallery-media/videos
@@ -238,50 +238,6 @@ rclone ls r2:sora-gallery-media/thumbnails
 
 ```bash
 npx wrangler r2 object put sora-gallery-media/test-picture/example.png --file ./example.png
-```
-
-### 疎通確認結果
-
-2026-05-23 に `rclone copy` で動画 1 件とサムネイル 1 件のアップロードを確認した。
-
-```text
-videos/3a21a4b1-66fa-4086-86f9-bbaccfedef3d.mp4
-thumbnails/3a21a4b1-66fa-4086-86f9-bbaccfedef3d.webp
-```
-
-公開 URL への HEAD リクエストはどちらも 200 OK だった。
-
-```text
-https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/videos/3a21a4b1-66fa-4086-86f9-bbaccfedef3d.mp4
-https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/3a21a4b1-66fa-4086-86f9-bbaccfedef3d.webp
-```
-
-注意: この疎通確認は一時 manifest で生成した公開 ID を使っている。本番 export manifest では維持せず、疎通確認用 object として削除する方針とする。
-
-### 初回アップロード結果
-
-2026-05-23 に `/private/tmp/sora-gallery-upload-prod` から R2 へ初回アップロードした。
-
-```text
-videos: 100 files
-thumbnails: 100 files
-local size: 203M
-```
-
-アップロードコマンド:
-
-```bash
-rclone copy /private/tmp/sora-gallery-upload-prod/videos r2:sora-gallery-media/videos --progress
-rclone copy /private/tmp/sora-gallery-upload-prod/thumbnails r2:sora-gallery-media/thumbnails --progress
-```
-
-代表 URL は 200 OK を確認した。
-
-```text
-https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/videos/7336a931-c2d1-477b-b9a6-63db1aacd7c2.mp4
-https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/7336a931-c2d1-477b-b9a6-63db1aacd7c2.webp
-https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/videos/6658c879-a6ab-415d-8c10-3188354b9967.mp4
-https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/thumbnails/2ef13128-00a8-46ef-863a-dad3e7f47aef.webp
 ```
 
 ## 独自ドメインへ切り替える場合

@@ -43,30 +43,15 @@ mise を使う場合は `npm` / `npx` の前に `mise exec --` を付ける。ac
 - preview D1 の確認では、production branch である `main` ではなく、`--branch preview-d1-smoke` のような非 production branch 名で deploy する。
 - `wrangler pages deploy dist --project-name sora-gallery` は production deployment として扱われるため、preview D1 の疎通確認には使わない。
 
-## 初回デプロイ結果
-
-2026-05-23 に `wrangler pages deploy dist --project-name sora-gallery` で初回デプロイした。
-
-出力された preview URL:
-
-```text
-https://4531bb51.sora-gallery.pages.dev
-```
-
-デプロイ直後に `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` が出た場合は、Cloudflare Pages の証明書反映待ちの可能性がある。まず数分から 30 分程度待ち、以下を確認する。
-
-```text
-https://sora-gallery.pages.dev
-https://4531bb51.sora-gallery.pages.dev
-```
-
 ## 公開後確認
 
 ```text
 /
 /videos.json
-/video/7336a931-c2d1-477b-b9a6-63db1aacd7c2
+/video/{id}
 ```
+
+`{id}` は今回公開する `public/videos.json` の動画 ID に置き換える。
 
 確認すること:
 

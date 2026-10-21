@@ -1,12 +1,5 @@
 # 公開前チェックリスト
 
-## 公開対象の確認
-
-- 公開タグと件数: 今回の公開対象を確認する。初回公開時の対象はタグ `高木ゆい`、99 件だったが、以降の固定条件にはしない。
-- 動画保存先: Cloudflare R2 `sora-gallery-media`
-- 公開 base URL: `https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev`
-- 独自ドメイン: 初期公開では使わない
-
 ## 公開前に必ず確認すること
 
 ### データ
@@ -15,7 +8,7 @@
 - `public/videos.json` が `npm run validate:data` を通る。
 - `public/videos.json` が `npm run validate:remote` を通る。
 - `filename`, `account`, ローカルパス、`config.json`, `generations.json`, `data/tags.json` が含まれない。
-- `videoUrl` と `thumbnailUrl` がすべて `https://pub-35c5e9c8db484d13a29dd79cfefc0741.r2.dev/...` で始まる。
+- `videoUrl` と `thumbnailUrl` がすべて 今回の公開先として設定した HTTPS の配信元を指している。
 - `prompt` は空文字を許容する。空 prompt はエラーではない。
 
 ### R2
@@ -69,16 +62,6 @@ npm run build
 - Cloudflare Pages の公開後、以下を確認する。
   - `/` が表示できる。
   - `/videos.json` の内容と件数が、今回公開したデータと一致する。
-  - `/video/7336a931-c2d1-477b-b9a6-63db1aacd7c2` のような個別 URL が表示できる。
+  - 公開動画の ID を使った `/video/{id}` が表示できる。
   - 代表動画が再生できる。
   - 音声が出る。
-
-## 初回公開前の未確認事項（当時の記録）
-
-以下は初回公開前の記録であり、現在の未確認事項を表すものではない。以後の確認結果は [セキュリティ保守記録](security-maintenance.md) などの実施記録を参照し、今回の公開でも上記のチェックを行う。
-
-- Cloudflare Pages 上での実表示。
-- Cloudflare Pages 上での SPA fallback。
-- モバイル実機での縦スワイプ。
-- Pages 公開後のキャッシュ挙動。
-- likes API の実環境疎通。
