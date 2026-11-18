@@ -1,1 +1,62 @@
-{"version":1,"rules":[]}
+{
+  "version": 1,
+  "rules": [
+    {
+      "decision": "wait",
+      "finding": {
+        "kind": "npm",
+        "scope": "development",
+        "url": "https://github.com/advisories/GHSA-fc5q-39xc-vjpf",
+        "name": "picomatch",
+        "severity": "high",
+        "range": "<=4.0.7",
+        "versions": [
+          "4.0.7"
+        ],
+        "fix": {
+          "name": "vite",
+          "version": "6.2.7",
+          "isSemVerMajor": true
+        }
+      },
+      "sourceHash": "62c54db83d31e08fd95c94519e36030e19eb6c929648d2781c2167103f36b47f",
+      "advisoryHash": "f5a942e83d301ad35c6ead5e8872c533f261396503d5ee5f56526d7e2b473bff",
+      "upstream": {
+        "vite": {
+          "version": "8.3.8",
+          "dependencies": {
+            "postcss": "^8.5.32",
+            "rolldown": "~1.2.18",
+            "picomatch": "^4.0.7",
+            "tinyglobby": "^0.2.17",
+            "lightningcss": "^1.33.0"
+          }
+        },
+        "tinyglobby": {
+          "version": "0.2.17",
+          "dependencies": {
+            "fdir": "^6.5.0",
+            "picomatch": "^4.0.4"
+          }
+        },
+        "@vitejs/plugin-react": {
+          "version": "6.3.0",
+          "dependencies": {
+            "@rolldown/pluginutils": "^1.0.1"
+          }
+        },
+        "@tailwindcss/vite": {
+          "version": "4.3.5",
+          "dependencies": {
+            "tailwindcss": "4.3.5",
+            "@tailwindcss/node": "4.3.5",
+            "@tailwindcss/oxide": "4.3.5"
+          }
+        }
+      },
+      "reason": "悪用には攻撃者が細工したglobパターンを処理させる必要があります。Viteはビルド・開発用で、本番は静的配信と独立したlikes APIです。現在のソース・設定に問題となるパターンはなく、公開画面の検索やHTTP入力をpicomatchへ渡す経路も確認されませんでした。現在の信頼したソース・設定を使う範囲では修正版を待ってよいと判断しています。",
+      "action": "修正版の公開を待ちます。信頼できないソース・プラグイン・glob設定を取り込む場合や、開発サーバーの公開範囲を変える場合は再調査してください。条件の変化は監視でも再調査を通知します。",
+      "evidence": "実行用監査0件。Viteからpicomatch・tinyglobby・fdirへの経路、createFilterとimport.meta.globの処理、Vite設定、公開用ソースとPages Functionsを確認しました。picomatchの修正版は未公開で、npmのVite 6系へのダウングレード案は採用していません。"
+    }
+  ]
+}
