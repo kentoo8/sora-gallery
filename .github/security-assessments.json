@@ -19,7 +19,7 @@
           "isSemVerMajor": true
         }
       },
-      "sourceHash": "62c54db83d31e08fd95c94519e36030e19eb6c929648d2781c2167103f36b47f",
+      "sourceHash": "0036fd8cc9b49e3804d291b26ca13313f549f152ae995c88266dfae925dfd557",
       "advisoryHash": "f5a942e83d301ad35c6ead5e8872c533f261396503d5ee5f56526d7e2b473bff",
       "upstream": {
         "vite": {
@@ -56,7 +56,7 @@
       },
       "reason": "悪用には攻撃者が細工したglobパターンを処理させる必要があります。Viteはビルド・開発用で、本番は静的配信と独立したlikes APIです。現在のソース・設定に問題となるパターンはなく、公開画面の検索やHTTP入力をpicomatchへ渡す経路も確認されませんでした。現在の信頼したソース・設定を使う範囲では修正版を待ってよいと判断しています。",
       "action": "修正版の公開を待ちます。信頼できないソース・プラグイン・glob設定を取り込む場合や、開発サーバーの公開範囲を変える場合は再調査してください。条件の変化は監視でも再調査を通知します。",
-      "evidence": "実行用監査0件。Viteからpicomatch・tinyglobby・fdirへの経路、createFilterとimport.meta.globの処理、Vite設定、公開用ソースとPages Functionsを確認しました。picomatchの修正版は未公開で、npmのVite 6系へのダウングレード案は採用していません。"
+      "evidence": "実行用監査0件。Viteからpicomatch・tinyglobby・fdirへの経路、createFilterとimport.meta.globの処理、Vite設定、公開用ソースとPages Functionsを確認しました。picomatchの修正版は未公開で、npmのVite 6系へのダウングレード案は採用していません。 mainへのpush時の監視起動追加は利用経路・悪用条件を変えないことを差分で再確認し、公式情報と依存元の公開版・依存指定も再照合しました。"
     }
   ]
 }
