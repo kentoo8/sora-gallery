@@ -19,7 +19,7 @@
           "isSemVerMajor": true
         }
       },
-      "sourceHash": "16461e30586fca9d2359e90758b6c193ed7eaf125d7409bfa15aaa7abd40fbba",
+      "sourceHash": "b3b0893e91fefd9f4e53fab7320e49e6227d68eaa9b79be7672bff17871d9a2b",
       "advisoryHash": "f5a942e83d301ad35c6ead5e8872c533f261396503d5ee5f56526d7e2b473bff",
       "upstream": {
         "vite": {
